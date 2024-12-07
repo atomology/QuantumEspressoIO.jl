@@ -3,6 +3,11 @@ uuid = "3a638b13-24f5-41eb-8ce1-879979581471"
 authors = ["Junfeng Qiao", "Guoyuan Liu", "Aleksandr Poliukhin"]
 version = "1.0.0-DEV"
 
+[deps]
+EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
+FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
 [compat]
 julia = "1.6.7"
 
