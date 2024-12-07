@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+QuantumEspressoIO = "3a638b13-24f5-41eb-8ce1-879979581471"
