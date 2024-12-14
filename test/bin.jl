@@ -1,6 +1,7 @@
 @testset "Test parsing wavefunctions from binaries of QE" begin
     thr = 1e-13
-    path_tst_data = "data/wfc1.dat"
+    rootpath = artifact"Si"
+    path_tst_data = joinpath(rootpath, "Si", "wfc1.dat")
 
     _, evc_list = QuantumEspressoIO.read_wfc_dat(path_tst_data)
     # calculate_braket(bra, ket) = sum(conj(bra[i]) * ket[i] for i in eachindex(bra))

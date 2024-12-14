@@ -1,0 +1,23 @@
+[CrI3]
+git-tree-sha1 = "8841a9f093b2505b9cf3e171e61e8745d3c56f91"
+lazy = true
+
+    [[CrI3.download]]
+    sha256 = "9a0623564726ab934e0defc0bb3bd5cdf8781c8f97ed2a06be2cee81e32f7d88"
+    url = "https://drive.google.com/uc?export=download&id=1K6dGie9z13LiLtdSfajOZS3wFkASHUxh"
+
+[Si2]
+git-tree-sha1 = "efbde6e3cec95e235e10c015c830422996df9c32"
+lazy = true
+
+    [[Si2.download]]
+    sha256 = "397df5c770e449fa74f4fe941b8011beb7d3df78b93ebba5a7bdb48f2adbd830"
+    url = "https://drive.google.com/uc?export=download&id=1nkAB33vfIUDDADbt8upUZCdRoB7g5tvc"
+
+[Si]
+git-tree-sha1 = "11d7edb2a6fcfad1216466b351b45935e0b6484f"
+lazy = true
+
+    [[Si.download]]
+    sha256 = "95793dcd71d135098fe3c6c84549c6423d6ee344b33adc305f2512f9a7642fb0"
+    url = "https://drive.google.com/uc?export=download&id=1b5cdWkppcZmVXDE84sCAkz0Id7f7Ngvu"    

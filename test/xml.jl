@@ -1,6 +1,9 @@
 @testset "read qe xml" begin
-    qe = QuantumEspressoIO.read_qe_xml("./data/si2_bands.xml")
     using QuantumEspressoIO: Vec3
+
+    rootpath = artifact"Si2"
+    path_tst_data = joinpath(rootpath, "Si2", "si2_bands.xml")
+    qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
 
     lattice = [0.0 2.715265 2.715265; 2.715265 0.0 2.715265; 2.715265 2.715265 0.0]
     @test qe.lattice ≈ lattice
@@ -69,7 +72,10 @@ end
 
 @testset "read qe xml spin-polarized" begin
     using QuantumEspressoIO: Vec3
-    qe = QuantumEspressoIO.read_qe_xml("./data/cri3_bands.xml")
+
+    rootpath = artifact"CrI3"
+    path_tst_data = joinpath(rootpath, "CrI3", "cri3_bands.xml")
+    qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
 
     lattice = [
         6.8171434485254725 -3.4085717242627362 0.0
