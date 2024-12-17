@@ -7,7 +7,7 @@ function parse_qe_in(path_to_scf::String)
                                        :crystal_coordinates => true)
     parse_file(path_to_scf, QE_PW_PARSE_FUNCTIONS, out = scf_parameters)
 
-    return unitcell, scf_parameters
+    return scf_parameters
 end
 
 function getfirst(f::Function, A)
