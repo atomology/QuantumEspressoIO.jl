@@ -2,7 +2,7 @@
     using QuantumEspressoIO: Vec3
 
     rootpath = artifact"Si2"
-    path_tst_data = joinpath(rootpath, "Si2", "si2_bands.xml")
+    path_tst_data = joinpath(rootpath, "si2_bands.xml")
     qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
 
     lattice = [0.0 2.715265 2.715265; 2.715265 0.0 2.715265; 2.715265 2.715265 0.0]
@@ -74,7 +74,7 @@ end
     using QuantumEspressoIO: Vec3
 
     rootpath = artifact"CrI3"
-    path_tst_data = joinpath(rootpath, "CrI3", "cri3_bands.xml")
+    path_tst_data = joinpath(rootpath, "cri3_bands.xml")
     qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
 
     lattice = [
