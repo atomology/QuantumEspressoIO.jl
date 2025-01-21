@@ -3,8 +3,7 @@
 const NeedleType = Union{AbstractString, AbstractChar, Regex}
 
 function parse_qe_in(path_to_scf::String)
-    scf_parameters = Dict{Symbol, Any}(:format => "espresso-in",
-                                       :crystal_coordinates => true)
+    scf_parameters = Dict{Symbol, Any}()#:format => "espresso-in", :crystal_coordinates => true
     parse_file(path_to_scf, QE_PW_PARSE_FUNCTIONS, out = scf_parameters)
 
     return scf_parameters
@@ -31,7 +30,19 @@ function parse_file(f::AbstractString, parse_funcs::Vector{<:Pair{NeedleType, An
             for pf in parse_funcs
                 if occursin(pf.first, line)
                     # try
-                        pf.second(out, line, file)
+                        entry = pf.second(line, file)
+                        #need to append to the diciony out[entry.block]  with entry.flag and entry.result
+                        if entry.block in keys(out)
+                            out[entry.block][entry.flag] = entry.result
+                        else
+                            out[entry.block] = Dict{Symbol, Any}(entry.flag => entry.result)
+                        end
+                        # if entry.flag in keys(out[entry.block])
+                        #     out[entry.block][entry.flag] = entry.result
+                        # else
+                        #     out[entry.block][entry.flag] = entry.result
+                        # end
+                       
                     # catch e
                         # @warn "File corruption or parsing error detected executing parse function $(pf.second) in file $f at line $lc: \"$line\".\nTrying to continue smoothly. Error: $e"
                     # end
@@ -49,99 +60,187 @@ function parse_file(f::AbstractString, args...; kwargs...)
     end
 end
 
-function qe_parse_calculation(out, line, f)
-    out[:calculation] = strip(split(line)[3], ['\''])
+function qe_parse_calculation(line, f)
+    block = :CONTROL
+    flag = :calculation
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_verbosity(out, line, f)
-    out[:verbosity] = strip(split(line)[3], ['\''])
+function qe_parse_verbosity(line, f)
+    block = :CONTROL
+    flag = :verbosity
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_tstress(out, line, f)
-    out[:tstress] = split(line)[3] == ".true."
+function qe_parse_tstress(line, f)
+    block = :CONTROL
+    flag = :tsress
+    result = split(line)[3] == ".true."
+    return (;block, flag, result)
 end
 
-function qe_parse_tprnfor(out, line, f)
-    out[:tprnfor] = split(line)[3] == ".true."
+function qe_parse_tprnfor(line, f)
+    block = :CONTROL
+    flag = :tprnfor
+    result = split(line)[3] == ".true."
+    return (;block, flag, result)
 end
 
-function qe_parse_outdir(out, line, f)
-    out[:outdir] = strip(split(line)[3], ['\''])
+function qe_parse_outdir(line, f)
+    block = :CONTROL
+    flag = :outdir
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_prefix(out, line, f)
-    out[:prefix] = strip(split(line)[3], ['\''])
+function qe_parse_prefix(line, f)
+    block = :CONTROL
+    flag = :tsress
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_pseudo_dir(out, line, f)
-    out[:pseudo_dir] = strip(split(line)[3], ['\''])
+function qe_parse_pseudo_dir(line, f)
+    block = :CONTROL
+    flag = :pseudo_dir
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_ibrav(out, line, f)
-    out[:ibrav] = parse(Int, split(line)[3])
+function qe_parse_ibrav(line, f)
+    block = :SYSTEM
+    flag = :ibrav
+    result = parse(Int, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_nbnd(out, line, f)
-    out[:nbnd] = parse(Int, split(line)[3])
+function qe_parse_nbnd(line, f)
+    block = :SYSTEM
+    flag = :nbnd
+    result = parse(Int, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_ecutwfc(out, line, f)
-
-    out[:ecutwfc] = parse(Float64, split(line)[3])
+function qe_parse_ecutwfc(line, f)
+    block = :SYSTEM
+    flag = :ecutwfc
+    result = parse(Float64, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_ecutrho(out, line, f)
-    out[:ecutrho] = parse(Float64, split(line)[3])
+function qe_parse_ecutrho(line, f)
+    block = :SYSTEM
+    flag = :ecutrho
+    result = parse(Float64, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_nosym(out, line, f)
-    out[:nosym] = split(line)[3] == ".true."
+function qe_parse_nosym(line, f)
+    block = :SYSTEM
+    flag = :nosym
+    result = split(line)[3] == ".true."
+    return (;block, flag, result)
 end
 
-function qe_parse_noinv(out, line, f)
-    out[:noinv] = split(line)[3] == ".true."
+function qe_parse_noinv(line, f)
+    block = :SYSTEM
+    flag = :noinv
+    result = split(line)[3] == ".true."
+    return (;block, flag, result)
 end
 
-function qe_parse_nat(out, line, f)
-    out[:nat] = parse(Int, split(line)[3])
+function qe_parse_nat(line, f)
+    block = :SYSTEM
+    flag = :nat
+    result = parse(Int, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_diagonalization(out, line, f)
-    out[:diagonalization] = strip(split(line)[3], ['\''])
+function qe_parse_diagonalization(line, f)
+    block = :ELECTRONS
+    flag = :diagonalization
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_electrons_maxstep(out, line, f)
-    out[:electron_maxstep] = parse(Int, split(line)[3])
+function qe_parse_electrons_maxstep(line, f)
+    block = :ELECTRONS
+    flag = :electron_maxstep
+    result = parse(Int, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_mixing_mode(out, line, f)
-    out[:mixing_mode] = strip(split(line)[3], ['\''])
+function qe_parse_mixing_mode(line, f)
+    block = :ELECTRONS
+    flag = :mixing_mode
+    result = strip(split(line)[3], ['\''])
+    return (;block, flag, result)
 end
 
-function qe_parse_mixing_beta(out, line, f)
-    out[:mixing_beta] = parse(Float64, split(line)[3])
+function qe_parse_mixing_beta(line, f)
+    block = :ELECTRONS
+    flag = :mixing_beta
+    result = parse(Float64, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_conv_thr(out, line, f)
-    out[:conv_thr] = parse(Float64, split(line)[3])
+function qe_parse_conv_thr(line, f)
+    block = :ELECTRONS
+    flag = :conv_thr
+    result = parse(Float64, split(line)[3])
+    return (;block, flag, result)
 end
 
-function qe_parse_kpoints(out, line, f)
+function qe_parse_kpoints(line, f)
+    block = :K_POINTS
+    flag = :kpts
+    
     line = readline(f)
     values = [parse(Int,val) for val in  split(line)]
     #case of uniform unshifted grid for now
-    out[:kpts] = pytuple((values[1], values[2], values[3]))
+    result = (values[1], values[2], values[3], values[4], values[5], values[6])
+    return (;block, flag, result)
 end
 
-function qe_parse_pseudo(out, line, f)
-    out[:pseudopotentials] = Dict()
+function qe_parse_species(line, f)
+    block = :ATOMIC_SPECIES
+    flag = :species
+
+    result = []
     # line = readline(f)
     while !eof(f)
         line = strip(readline(f))
         length(split(line)) != 3 && break
         species = split(line)
-        out[:pseudopotentials][species[1]] = species[3]
+        symb = species[1]
+        mass = species[2]
+        pseudo = species[3]
+        push!(result, (;symb, mass, pseudo))
     end
+
+    return (;block, flag, result)
+end
+
+function qe_parse_atomic_positions(line, f)
+    block = :ATOMIC_POSITIONS
+    flag = :positions
+
+    result = []
+    # line = readline(f)
+    while !eof(f)
+        line = strip(readline(f))
+        length(split(line)) != 4 && break
+        species = split(line)
+        symb = species[1]
+        x = species[2]
+        y = species[3]
+        z = species[4]
+        push!(result, (;symb, x, y, z))
+    end
+
+    return (;block, flag, result)
 end
 
 const QE_PW_PARSE_FUNCTIONS::Vector{Pair{NeedleType, Any}}  = [
@@ -168,7 +267,60 @@ const QE_PW_PARSE_FUNCTIONS::Vector{Pair{NeedleType, Any}}  = [
     "mixing_beta" => qe_parse_mixing_beta,
     "conv_thr" => qe_parse_conv_thr,
     #Atomic_species
-    "ATOMIC_SPECIES" => qe_parse_pseudo,
+    "ATOMIC_SPECIES" => qe_parse_species,
     #K-points
     "K_POINTS" => qe_parse_kpoints,
+    # ATOMIC_POSITIONS
+    "ATOMIC_POSITIONS" => qe_parse_atomic_positions,
 ]
+
+
+# Trying to write scf.in based on input dicitonary
+
+function write_qe_in(path_to_scf::String, scf_parameters::Dict{Symbol, Any})
+    order = [:CONTROL, :SYSTEM, :ELECTRONS]
+
+    open(path_to_scf, "w") do file
+        for block in order
+            write(file, "&$block \n")
+            for (key, value) in scf_parameters[block]
+                if key in [:format, :crystal_coordinates]
+                    continue
+                end
+                write(file, "  $key = ")
+                if isa(value, AbstractString)
+                    write(file, "'$value'")
+                elseif isa(value, Bool)
+                    write(file, value ? ".true." : ".false.")
+                elseif isa(value, Tuple)
+                    write(file, value)
+                else
+                    write(file, "$value")
+                end
+                write(file, "\n")
+            end
+            write(file, "/\n\n")
+        end
+
+        write(file, "ATOMIC_SPECIES\n")
+        for (_, values) in scf_parameters[:ATOMIC_SPECIES]
+            for value in values
+                write(file, "$(value.symb)  $(value.mass)  $(value.pseudo) \n")
+            end
+        end
+        write(file, "\n")
+
+        write(file, "K_POINTS automatic\n")
+        write(file, "  ")
+        for value in scf_parameters[:K_POINTS][:kpts]
+            write(file, "$value ")
+        end
+        write(file, "\n \n")
+
+        write(file, "ATOMIC_POSITIONS crystal\n")
+        for value in scf_parameters[:ATOMIC_POSITIONS][:positions]
+            write(file, "$(value.symb)  $(value.x)  $(value.y)  $(value.z) \n")
+        end
+
+    end
+end
