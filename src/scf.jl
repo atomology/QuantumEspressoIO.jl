@@ -26,6 +26,7 @@ function parse_file(f::AbstractString, parse_funcs::Vector{<:Pair{NeedleType, An
             if isempty(line)
                 continue
             end
+
             # Iterate over the pairs in QE_PW_PARSE_FUNCTIONS to find matching lines
             for pf in parse_funcs
                 if occursin(pf.first, line)
@@ -42,7 +43,7 @@ function parse_file(f::AbstractString, parse_funcs::Vector{<:Pair{NeedleType, An
                         # else
                         #     out[entry.block][entry.flag] = entry.result
                         # end
-                       
+
                     # catch e
                         # @warn "File corruption or parsing error detected executing parse function $(pf.second) in file $f at line $lc: \"$line\".\nTrying to continue smoothly. Error: $e"
                     # end
@@ -113,6 +114,9 @@ function qe_parse_ibrav(line, f)
     block = :SYSTEM
     flag = :ibrav
     result = parse(Int, split(line)[3])
+    if result != 0
+        throw("ibrav != 0 is not supported")
+    end
     return (;block, flag, result)
 end
 
@@ -158,6 +162,13 @@ function qe_parse_nat(line, f)
     return (;block, flag, result)
 end
 
+function qe_parse_ntyp(line, f)
+    block = :SYSTEM
+    flag = :ntyp
+    result = parse(Int, split(line)[3])
+    return (;block, flag, result)
+end
+
 function qe_parse_diagonalization(line, f)
     block = :ELECTRONS
     flag = :diagonalization
@@ -196,7 +207,7 @@ end
 function qe_parse_kpoints(line, f)
     block = :K_POINTS
     flag = :kpts
-    
+
     line = readline(f)
     values = [parse(Int,val) for val in  split(line)]
     #case of uniform unshifted grid for now
@@ -207,20 +218,22 @@ end
 function qe_parse_species(line, f)
     block = :ATOMIC_SPECIES
     flag = :species
-
     result = []
-    # line = readline(f)
+
     while !eof(f)
+        pos = position(f)
         line = strip(readline(f))
-        length(split(line)) != 3 && break
+
+        if length(split(line)) != 3
+            seek(f, pos)  # Restore the position before the last read
+            break
+        end
+
         species = split(line)
-        symb = species[1]
-        mass = species[2]
-        pseudo = species[3]
-        push!(result, (;symb, mass, pseudo))
+        push!(result, (; symb=species[1], mass=species[2], pseudo=species[3]))
     end
 
-    return (;block, flag, result)
+    return (; block, flag, result)
 end
 
 function qe_parse_atomic_positions(line, f)
@@ -228,20 +241,44 @@ function qe_parse_atomic_positions(line, f)
     flag = :positions
 
     result = []
-    # line = readline(f)
     while !eof(f)
+        pos = position(f)
         line = strip(readline(f))
-        length(split(line)) != 4 && break
+
+        if length(split(line)) != 4
+            seek(f, pos)  # Restore the position before the last read
+            break
+        end
+
         species = split(line)
         symb = species[1]
-        x = species[2]
-        y = species[3]
-        z = species[4]
+        x = parse(Float64, species[2])
+        y = parse(Float64, species[3])
+        z = parse(Float64, species[4])
         push!(result, (;symb, x, y, z))
     end
 
     return (;block, flag, result)
 end
+
+function qe_parse_cell(line, f)
+    block = :CELL_PARAMETERS
+    flag = :cell
+
+    result = []
+
+    #save the 3x3 matrix that was read from the next 3 lines
+    for _ in 1:3
+        line = readline(f)
+        values = [parse(Float64, val) for val in split(line)]
+        push!(result, values)
+    end
+
+    result = reduce(hcat, result)'# to matrix
+
+    return (;block, flag, result)
+end
+
 
 const QE_PW_PARSE_FUNCTIONS::Vector{Pair{NeedleType, Any}}  = [
     #Contol
@@ -260,6 +297,7 @@ const QE_PW_PARSE_FUNCTIONS::Vector{Pair{NeedleType, Any}}  = [
     "nosym" => qe_parse_nosym,
     "noinv" => qe_parse_noinv,
     "nat" => qe_parse_nat,
+    "ntyp" => qe_parse_ntyp,
     #Electrons
     "diagonalization" => qe_parse_diagonalization,
     "electrons_maxstep" => qe_parse_electrons_maxstep,
@@ -272,6 +310,8 @@ const QE_PW_PARSE_FUNCTIONS::Vector{Pair{NeedleType, Any}}  = [
     "K_POINTS" => qe_parse_kpoints,
     # ATOMIC_POSITIONS
     "ATOMIC_POSITIONS" => qe_parse_atomic_positions,
+    # CELL_PARAMETERS
+    "CELL_PARAMETERS" => qe_parse_cell
 ]
 
 
@@ -319,7 +359,12 @@ function write_qe_in(path_to_scf::String, scf_parameters::Dict{Symbol, Any})
 
         write(file, "ATOMIC_POSITIONS crystal\n")
         for value in scf_parameters[:ATOMIC_POSITIONS][:positions]
-            write(file, "$(value.symb)  $(value.x)  $(value.y)  $(value.z) \n")
+            write(file, "$(value.symb) $(value.x)  $(value.y)  $(value.z) \n")
+        end
+
+        write(file, "CELL_PARAMETERS angstrom\n")
+        for value in eachrow(scf_parameters[:CELL_PARAMETERS][:cell])
+            write(file, join(value, " ")*" \n")
         end
 
     end
