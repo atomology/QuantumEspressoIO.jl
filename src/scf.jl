@@ -5,6 +5,8 @@ const NeedleType = Union{AbstractString, AbstractChar, Regex}
 function parse_qe_in(path_to_scf::String)
     scf_parameters = Dict{Symbol, Any}()#:format => "espresso-in", :crystal_coordinates => true
     parse_file(path_to_scf, QE_PW_PARSE_FUNCTIONS, out = scf_parameters)
+    #TODO make general
+    scf_parameters[:ATOMIC_POSITIONS][:format] = "crystal"
 
     return scf_parameters
 end
@@ -77,7 +79,7 @@ end
 
 function qe_parse_tstress(line, f)
     block = :CONTROL
-    flag = :tsress
+    flag = :tstress
     result = split(line)[3] == ".true."
     return (;block, flag, result)
 end
@@ -98,7 +100,7 @@ end
 
 function qe_parse_prefix(line, f)
     block = :CONTROL
-    flag = :tsress
+    flag = :prefix
     result = strip(split(line)[3], ['\''])
     return (;block, flag, result)
 end
@@ -357,7 +359,13 @@ function write_qe_in(path_to_scf::String, scf_parameters::Dict{Symbol, Any})
         end
         write(file, "\n \n")
 
-        write(file, "ATOMIC_POSITIONS crystal\n")
+        #check if atomic positions are in crystal coordinates
+        if scf_parameters[:ATOMIC_POSITIONS][:format] == "crystal"
+            write(file, "ATOMIC_POSITIONS crystal\n")
+        else
+            write(file, "ATOMIC_POSITIONS angstrom\n")
+        end
+
         for value in scf_parameters[:ATOMIC_POSITIONS][:positions]
             write(file, "$(value.symb) $(value.x)  $(value.y)  $(value.z) \n")
         end
