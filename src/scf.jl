@@ -19,11 +19,10 @@ function getfirst(f::Function, A)
     end
 end
 
-function parse_file(f::AbstractString, parse_funcs::Vector{<:Pair{NeedleType, Any}}; out = Dict{Symbol, Any}())
+function parse_file(io::IO, parse_funcs::Vector{<:Pair{NeedleType, Any}}; out = Dict{Symbol, Any}())
     lc = 0
-    open(f, "r") do file
-        while !eof(file)
-            line = strip(readline(file))
+        while !eof(io)
+            line = strip(readline(io))
             lc += 1
             if isempty(line)
                 continue
@@ -33,33 +32,34 @@ function parse_file(f::AbstractString, parse_funcs::Vector{<:Pair{NeedleType, An
             for pf in parse_funcs
                 if occursin(pf.first, line)
                     # try
-                        entry = pf.second(line, file)
+                        entry = pf.second(line, io)
+
                         #need to append to the diciony out[entry.block]  with entry.flag and entry.result
                         if entry.block in keys(out)
                             out[entry.block][entry.flag] = entry.result
                         else
                             out[entry.block] = Dict{Symbol, Any}(entry.flag => entry.result)
                         end
+
                         # if entry.flag in keys(out[entry.block])
                         #     out[entry.block][entry.flag] = entry.result
                         # else
                         #     out[entry.block][entry.flag] = entry.result
                         # end
 
-                    # catch e
-                        # @warn "File corruption or parsing error detected executing parse function $(pf.second) in file $f at line $lc: \"$line\".\nTrying to continue smoothly. Error: $e"
-                    # end
+                        # catch e
+                            # @warn "File corruption or parsing error detected executing parse function $(pf.second) in file $f at line $lc: \"$line\".\nTrying to continue smoothly. Error: $e"
+                        # end
                     break  # Exit the loop once the matching function is found
                 end
             end
         end
-    end
     return out
 end
 
 function parse_file(f::AbstractString, args...; kwargs...)
-    open(f, "r") do file
-        parse_file(file, args...;kwargs...)
+    open(f, "r") do io
+        parse_file(io, args...;kwargs...)
     end
 end
 
