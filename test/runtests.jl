@@ -7,3 +7,4 @@ using Artifacts
 
 include("xml.jl")
 include("bin.jl")
+include("scf.jl")

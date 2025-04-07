@@ -1,8 +1,7 @@
 using QuantumEspressoIO
-
-using LazyArtifacts
-using Artifacts
-using Test
+# using LazyArtifacts
+# using Artifacts
+# using Test
 
 @testset "parse scf.in" begin
     rootpath = artifact"Si"
@@ -61,8 +60,8 @@ end
     path_tst_data = joinpath(rootpath, "scf.in")
     params = QuantumEspressoIO.parse_qe_in(path_tst_data)
     QuantumEspressoIO.write_qe_in("scf_tst.in", params)
-
-    #read the file and compare
     params_tst = QuantumEspressoIO.parse_qe_in("scf_tst.in")
+    rm("scf_tst.in")
+
     @test params == params_tst
 end
