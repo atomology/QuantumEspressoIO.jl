@@ -208,12 +208,27 @@ end
 
 function qe_parse_kpoints(line, f)
     block = :K_POINTS
-    flag = :kpts
 
     line = readline(f)
-    values = [parse(Int,val) for val in  split(line)]
-    #case of uniform unshifted grid for now
-    result = (values[1], values[2], values[3], values[4], values[5], values[6])
+
+    # if line is just one integer then flag is :kpath
+    kpts = []
+    if length(split(line)) == 1
+        flag = :kpath
+        Nk = parse(Int, line)
+        pos = position(f)
+        for _ in 1:Nk
+            line = readline(f)
+            kpt = [parse(Float64, val) for val in split(line)]
+            push!(kpts, kpt)
+        end
+        seek(f, pos)# restore position in file
+        result = kpts
+    else
+        flag = :kpts
+        result = [parse(Int, val) for val in split(line)]
+    end
+
     return (;block, flag, result)
 end
 
@@ -352,12 +367,24 @@ function write_qe_in(path_to_scf::String, scf_parameters::Dict{Symbol, Any})
         end
         write(file, "\n")
 
-        write(file, "K_POINTS automatic\n")
-        write(file, "  ")
-        for value in scf_parameters[:K_POINTS][:kpts]
-            write(file, "$value ")
+        # if scf_parameters[:K_POINTS] has :kpts or :kpath then write
+        if :kpts in keys(scf_parameters[:K_POINTS])
+            write(file, "K_POINTS automatic\n")
+            write(file, "  ")
+            for value in scf_parameters[:K_POINTS][:kpts]
+                write(file, "$value ")
+            end
+            write(file, "\n \n")
+        elseif :kpath in keys(scf_parameters[:K_POINTS])
+            write(file, "K_POINTS crystal\n")
+            kpts =scf_parameters[:K_POINTS][:kpath]
+            Nk = length(kpts)
+            write(file, "$Nk \n")
+            for ik in 1:Nk
+                kpt = kpts[ik]
+                write(file, "$(kpt[1]) $(kpt[2]) $(kpt[3]) $(kpt[4]) \n")
+            end
         end
-        write(file, "\n \n")
 
         #check if atomic positions are in crystal coordinates
         if scf_parameters[:ATOMIC_POSITIONS][:format] == "crystal"
