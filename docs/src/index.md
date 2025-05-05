@@ -1,10 +1,10 @@
+# QuantumEspressoIO
+
 ```@meta
 CurrentModule = QuantumEspressoIO
 ```
 
-# QuantumEspressoIO
-
-Documentation for [QuantumEspressoIO](https://github.com/Koulb/QuantumEspressoIO.jl).
+Documentation for [QuantumEspressoIO](https://github.com/atomology/QuantumEspressoIO.jl).
 
 ```@index
 ```

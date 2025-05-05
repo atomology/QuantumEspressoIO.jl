@@ -11,5 +11,5 @@
       a = 1
     /
     """
-    @test readlines(tmpfile) == split(ref)
+    @test readlines(tmpfile) == split(ref, "\n")
 end

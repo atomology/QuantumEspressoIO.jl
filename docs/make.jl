@@ -1,17 +1,22 @@
 using QuantumEspressoIO
 using Documenter
 
-DocMeta.setdocmeta!(QuantumEspressoIO, :DocTestSetup, :(using QuantumEspressoIO); recursive=true)
+DocMeta.setdocmeta!(
+    QuantumEspressoIO,
+    :DocTestSetup, :(using QuantumEspressoIO);
+    recursive=true,
+)
 
 makedocs(;
-    modules=[QuantumEspressoIO],
-    authors="Junfeng Qiao, Guoyuan Liu, Aleksandr Poliukhin",
     sitename="QuantumEspressoIO.jl",
-    format=Documenter.HTML(;
-        edit_link="main",
-        assets=String[],
-    ),
+    authors="Aleksandr Poliukhin, Junfeng Qiao, Guoyuan Liu",
+    modules=[QuantumEspressoIO],
     pages=[
         "Home" => "index.md",
     ],
+    # doctest=:fix,  # update all the jldoctest
 )
+
+# Documenter will auto detect build environment; on local machine it will be
+# skipped, so it's safe to run this script
+deploydocs(; repo="github.com/atomology/QuantumEspressoIO.jl.git", devbranch="main")
