@@ -1,4 +1,4 @@
-@testitem "Test parsing wavefunctions from binaries of QE" begin
+@testitem "read_wfc_dat" begin
     using LazyArtifacts
     thr = 1e-13
     rootpath = artifact"Si"
