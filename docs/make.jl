@@ -13,6 +13,13 @@ makedocs(;
     modules=[QuantumEspressoIO],
     pages=[
         "Home" => "index.md",
+        "API" => [
+            "Utilities" => "api/utils.md",
+            "Fortran Namelist" => "api/namelist.md",
+            "`pw.x`" => "api/pw.md",
+            "XML" => "api/xml.md",
+            "Binaries" => "api/bin.md",
+        ]
     ],
     # doctest=:fix,  # update all the jldoctest
 )
