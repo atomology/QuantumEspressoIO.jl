@@ -1,4 +1,4 @@
-@testset "Test parsing wavefunctions from binaries of QE" begin
+@testitem "Test parsing wavefunctions from binaries of QE" begin
     thr = 1e-13
     rootpath = artifact"Si"
     path_tst_data = joinpath(rootpath, "wfc1.dat")

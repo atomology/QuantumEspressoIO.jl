@@ -1,4 +1,4 @@
-@testset "read qe xml" begin
+@testitem "read qe xml" begin
     using QuantumEspressoIO: Vec3
 
     rootpath = artifact"Si2"

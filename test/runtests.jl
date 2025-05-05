@@ -1,9 +1,6 @@
-using QuantumEspressoIO
-using Test
+using TestItemRunner
 
-#Temporarily loading artifacts for all tests here
+# Temporarily loading artifacts for all tests here
 using LazyArtifacts
-using Artifacts
 
-include("xml.jl")
-include("bin.jl")
+@run_package_tests verbose = true
