@@ -36,6 +36,10 @@ SymbolVec3(s::AbstractString, v) = SymbolVec3(Symbol(s), v)
 SymbolVec3(p::Pair) = SymbolVec3(p.first, p.second)
 SymbolVec3(d::Dict) = SymbolVec3(only(d))
 
+
+const StrOrSym = Union{AbstractString, Symbol}
+
+
 abstract type FileFormat end
 
 """
