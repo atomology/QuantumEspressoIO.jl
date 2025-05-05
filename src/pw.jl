@@ -7,14 +7,18 @@ Write the `atomic_species` card of `pw.x`.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO: write_atomic_species
+
 inputs = Dict(
-    "species" => ["Si", "O"],
-    "masses" => [28.0855, 15.999]
-    "pseudos" => ["Si.upf", "O.upf"],
+    :species => ["Si", "O"],
+    :masses => [28.0855, 15.999],
+    :pseudos => ["Si.upf", "O.upf"],
 )
 write_atomic_species(stdout, inputs)
-
 # output
+ATOMIC_SPECIES
+Si       28.085500  Si.upf
+O        15.999000  O.upf
 ```
 """
 function write_atomic_species(io::IO, card::AbstractDict)
@@ -31,17 +35,21 @@ Write the `atomic_positions` card of `pw.x`.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO: write_atomic_positions
+
 inputs = Dict(
-    "option" => "crystal",
-    "atoms" => ["Si", "O"],
-    "positions" => [
+    :option => "crystal",
+    :atoms => ["Si", "O"],
+    :positions => [
         [0.0, 0.0, 0.0],
         [0.5, 0.5, 0.5],
     ],
 )
 write_atomic_positions(stdout, inputs)
-
 # output
+ATOMIC_POSITIONS crystal
+Si        0.0000000000      0.0000000000      0.0000000000
+O         0.5000000000      0.5000000000      0.5000000000
 ```
 """
 function write_atomic_positions(io::IO, card::AbstractDict)
@@ -60,17 +68,22 @@ Write the `cell_parameters` card of `pw.x`.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO: write_cell_parameters
+
 inputs = Dict(
-    "option" => "angstrom",
-    "cell" => [
+    :option => "angstrom",
+    :cell => [
         [1.0, 0.0, 0.0],
         [0.0, 2.0, 0.0],
         [0.0, 0.0, 3.0],
     ],
 )
 write_cell_parameters(stdout, inputs)
-
 # output
+CELL_PARAMETERS angstrom
+    1.0000000000      0.0000000000      0.0000000000
+    0.0000000000      2.0000000000      0.0000000000
+    0.0000000000      0.0000000000      3.0000000000
 ```
 """
 function write_cell_parameters(io::IO, card::AbstractDict)
@@ -89,17 +102,22 @@ Write the `k_points` card of `pw.x`.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO: write_k_points
+
 inputs = Dict(
-    "option" => "crystal",
-    "kpoints" => [
+    :option => "crystal",
+    :kpoints => [
         [0.0, 0.0, 0.0],
         [0.5, 0.5, 0.5],
     ],
-    "kweights" => [1.0, 1.0],
+    :kweights => [1.0, 1.0],
 )
 write_k_points(stdout, inputs)
-
 # output
+K_POINTS crystal
+2
+    0.0000000000      0.0000000000      0.0000000000      1.0000000000
+    0.5000000000      0.5000000000      0.5000000000      1.0000000000
 ```
 """
 function write_k_points(io::IO, card::AbstractDict)
@@ -147,55 +165,56 @@ Write the `pw.x` input file.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO
 using OrderedCollections
+
 # Use OrderedDict to preserve the order of the keys
 inputs = OrderedDict(
     :control => OrderedDict(
-        "calculation" => "scf",
-        "prefix" => "SiO2",
-        "outdir" => "./out",
-        "pseudo_dir" => "./pseudo",
+        :calculation => "scf",
+        :prefix => "SiO2",
+        :outdir => "./out",
+        :pseudo_dir => "./pseudo",
     ),
     :system => OrderedDict(
-        "ibrav" => 0,
-        "nat" => 2,
-        "ntyp" => 2,
+        :ibrav => 0,
+        :nat => 2,
+        :ntyp => 2,
     ),
     :electrons => OrderedDict(
-        "conv_thr" => 1e-6,
+        :conv_thr => 1e-6,
     ),
     :atomic_species => Dict(
-        "species" => ["Si", "O"],
-        "masses" => [28.0855, 15.999],
-        "pseudos" => ["Si.upf", "O.upf"],
+        :species => ["Si", "O"],
+        :masses => [28.0855, 15.999],
+        :pseudos => ["Si.upf", "O.upf"],
     ),
     :atomic_positions => Dict(
-        "option" => "crystal",
-        "atoms" => ["Si", "O"],
-        "positions" => [
+        :option => "crystal",
+        :atoms => ["Si", "O"],
+        :positions => [
             [0.0, 0.0, 0.0],
             [0.5, 0.5, 0.5],
         ],
     ),
     :cell_parameters => Dict(
-        "option" => "angstrom",
-        "cell" => [
+        :option => "angstrom",
+        :cell => [
             [1.0, 0.0, 0.0],
             [0.0, 2.0, 0.0],
             [0.0, 0.0, 3.0],
         ],
     ),
     :k_points => Dict(
-        "option" => "crystal",
-        "kpoints" => [
+        :option => "crystal",
+        :kpoints => [
             [0.0, 0.0, 0.0],
             [0.5, 0.5, 0.5],
         ],
-        "kweights" => [1.0, 1.0],
+        :kweights => [1.0, 1.0],
     ),
 )
 write_pw_in(stdout, inputs)
-
 # output
 ```
 """

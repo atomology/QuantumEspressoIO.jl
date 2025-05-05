@@ -14,6 +14,8 @@ Write a Fortran namelist.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO
+
 name = :input
 namelist = Dict(
     "a" => 1,
@@ -23,8 +25,16 @@ namelist = Dict(
     "e" => true,
 )
 write_namelist(stdout, name, namelist)
-
 # output
+&input
+  c(1) = 3
+  c(2) = 4
+  c(3) = 5
+  e = .true.
+  b = 2.0
+  a = 1
+  d = 'test'
+/
 ```
 """
 function write_namelist(io::IO, name::StrOrSym, namelist::AbstractDict)
@@ -74,7 +84,9 @@ Generic writer for QE input namelist.
 
 # Examples
 ```jldoctest
+using QuantumEspressoIO
 using OrderedCollections
+
 # Use OrderedDict to preserve the order of the keys
 inputs = OrderedDict(
     :control => OrderedDict("calculation" => "scf", "prefix" => "qe"),
@@ -82,8 +94,18 @@ inputs = OrderedDict(
     :electrons => OrderedDict("mixing_beta" => 0.7),
 )
 write_qe_in(stdout, inputs)
-
 # output
+&control
+  calculation = 'scf'
+  prefix = 'qe'
+/
+&system
+  ecutwfc = 30.0
+  ecutrho = 300.0
+/
+&electrons
+  mixing_beta = 0.7
+/
 ```
 """
 function write_qe_in(io::IO, inputs::AbstractDict)
