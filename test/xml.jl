@@ -70,7 +70,7 @@
     @test qe.alat ≈ 3.8399645884368714
 end
 
-@testset "read qe xml spin-polarized" begin
+@testitem "read qe xml spin-polarized" begin
     using LazyArtifacts
 
     rootpath = artifact"CrI3"
