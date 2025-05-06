@@ -1,6 +1,8 @@
 using EzXML
 
 """
+    $(SIGNATURES)
+
 Read atomic structure and band structure from QE's XML output.
 
 # Return
