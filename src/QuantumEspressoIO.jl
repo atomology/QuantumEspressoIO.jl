@@ -12,5 +12,7 @@ include("namelist.jl")
 include("pw.jl")
 include("xml.jl")
 include("bin.jl")
+include("band.jl")
+include("projwfc.jl")
 
 end
