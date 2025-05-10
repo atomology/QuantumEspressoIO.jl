@@ -1,9 +1,14 @@
-using QuantumEspressoIO
-using Test
+using Documenter, QuantumEspressoIO
+DocMeta.setdocmeta!(
+    QuantumEspressoIO,
+    :DocTestSetup, :(using QuantumEspressoIO);
+    recursive=true,
+)
+doctest(
+    QuantumEspressoIO,
+    # fix=true,  # update all the output in `jldoctest`
+)
 
-#Temporarily loading artifacts for all tests here
-using LazyArtifacts
-using Artifacts
 
-include("xml.jl")
-include("bin.jl")
+using TestItemRunner
+@run_package_tests verbose = true

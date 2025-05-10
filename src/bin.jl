@@ -1,3 +1,5 @@
+using FortranFiles
+
 """
 Read wavefunction data from a QE's `wfc.dat` file.
 

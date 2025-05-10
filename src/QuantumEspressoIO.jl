@@ -1,13 +1,13 @@
 module QuantumEspressoIO
 
-# Write your package code here.
+using DocStringExtensions
 
 include("common/const.jl")
 include("common/type.jl")
+include("common/fortran.jl")
 
-using FortranFiles
-
-include("scf.jl")
+include("namelist.jl")
+include("pw.jl")
 include("xml.jl")
 include("bin.jl")
 

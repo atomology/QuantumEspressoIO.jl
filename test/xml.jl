@@ -1,4 +1,5 @@
-@testset "read qe xml" begin
+@testitem "read qe xml" begin
+    using LazyArtifacts
     using QuantumEspressoIO: Vec3
 
     rootpath = artifact"Si2"
@@ -71,6 +72,7 @@
 end
 
 @testset "read qe xml spin-polarized" begin
+    using LazyArtifacts
     using QuantumEspressoIO: Vec3
 
     rootpath = artifact"CrI3"
