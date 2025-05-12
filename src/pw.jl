@@ -96,11 +96,11 @@ function read_atomic_positions!(lines::AbstractVector, n_atoms::Integer)
     option, content = result
 
     atoms = String[]
-    positions = Vec3{Float64}[]
+    positions = SVector{3,T}[]
     for line in content
         at, x, y, z = split(line)
         push!(atoms, at)
-        push!(positions, Vec3{Float64}(parse_float.([x, y, z])))
+        push!(positions, SA_F64[parse_float.([x, y, z])])
     end
 
     card = OrderedDict{Symbol, Any}()
@@ -143,9 +143,9 @@ function read_cell_parameters!(lines::AbstractVector)
     isnothing(result) && return nothing
     option, content = result
 
-    cell = Vec3{Float64}[]
+    cell =SVector{3,T}[]
     for line in content
-        push!(cell, Vec3{Float64}(parse_float.(split(line))))
+        push!(cell, SA_F64[parse_float.(split(line))])
     end
 
     card = OrderedDict{Symbol, Any}()
@@ -210,11 +210,11 @@ function read_k_points!(lines::AbstractVector)
         n_lines = nkpts + 1
         content = parse_card!(lines, name, n_lines)[2]
         deleteat!(content, 1)
-        kpoints = Vec3{Float64}[]
+        kpoints = SVector{3,T}[]
         kweights = Float64[]
         for line in content
             parts = parse_float.(split(line))
-            push!(kpoints, Vec3{Float64}(parts[1:3]))
+            push!(kpoints, SA_F64[parts[1:3]])
             push!(kweights, parts[4])
         end
         card[:kpoints] = kpoints
