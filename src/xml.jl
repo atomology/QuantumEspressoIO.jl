@@ -33,9 +33,9 @@ function read_qe_xml(filename::AbstractString)
     n_atoms = parse(Int, atomic_structure["nat"])
 
     # structure info, each column is a vector for position or lattice vector
-    atom_positions = SVector{3,T}[]
+    atom_positions = SVector{3,Float64}[]
     atom_labels = Vector{String}(undef, n_atoms)
-    lattice =  SVector{3,T}[]#zeros(3, 3)
+    lattice =  zeros(3, 3)
 
     for (i, atom) in enumerate(eachelement(findfirst("atomic_positions", atomic_structure)))
         pos = parse.(Float64, split(atom.content))
@@ -45,17 +45,12 @@ function read_qe_xml(filename::AbstractString)
     # lattice
     for i in 1:3
         a = findfirst("cell/a$i", atomic_structure)
-        # lattice[:, i] = parse.(Float64, split(a.content))
-        push!(lattice, SA_F64[parse.(Float64, split(a.content))])
+        lattice[:, i] = parse.(Float64, split(a.content))
     end
     # from cartesian to fractional
-    lattice_matrix = hcat(lattice...)
-    inv_lattice_matrix = inv(lattice_matrix)
-    inv_lattice = [collect(inv_lattice_matrix[:, i]) for i in 1:size(inv_lattice_matrix, 2)]
-
-    # inv_lattice = inv(lattice)
+    inv_lattice = inv(lattice)
     atom_positions = map(atom_positions) do pos
-        SA_F64[inv_lattice * pos]
+        SA_F64[inv_lattice * pos...]
     end
     # from bohr to angstrom
     lattice *= BOHR_RADIUS_ANGS
@@ -87,7 +82,7 @@ function read_qe_xml(filename::AbstractString)
         n_bands = parse(Int, findfirst("nbnd", band_structure).content)
         eigenvalues = Vector{Float64}[]
     end
-    kpoints = SVector{3,T}[]
+    kpoints = SVector{3,Float64}[]
 
     n_electrons = parse(Float64, findfirst("nelec", band_structure).content)
     fermi_energy = parse(Float64, findfirst("fermi_energy", band_structure).content)
@@ -120,8 +115,9 @@ function read_qe_xml(filename::AbstractString)
         end
     end
 
-    lattice = Matrix{3,3,Float64}(lattice)
-    recip_lattice =  Matrix{3,3,Float64}(recip_lattice)
+    # Convert to vector of SVectors [v1,v2,v3]
+    lattice = SVector{3,Float64}[SA_F64[lattice[:, i]...] for i in 1:3]
+    recip_lattice = SVector{3,Float64}[SA_F64[recip_lattice[:, i]...] for i in 1:3]
 
     results = (;
         lattice,

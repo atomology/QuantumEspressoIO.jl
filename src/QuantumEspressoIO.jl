@@ -5,6 +5,8 @@ using DocStringExtensions
 include("common/const.jl")
 include("common/type.jl")
 include("common/fortran.jl")
+include("common/lattice.jl")
+
 
 include("namelist.jl")
 include("pw.jl")
