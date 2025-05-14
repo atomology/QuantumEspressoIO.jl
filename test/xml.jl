@@ -1,24 +1,24 @@
 @testitem "read qe xml" begin
     using LazyArtifacts
-    using QuantumEspressoIO: Vec3
+    using StaticArrays
 
     rootpath = artifact"Si2"
     path_tst_data = joinpath(rootpath, "si2_bands.xml")
     qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
 
-    lattice = [0.0 2.715265 2.715265; 2.715265 0.0 2.715265; 2.715265 2.715265 0.0]
+    lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
     @test qe.lattice ≈ lattice
 
-    atom_positions = Vec3[[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]
+    atom_positions = [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]
     @test qe.atom_positions ≈ atom_positions
 
     atom_labels = ["Si", "Si"]
     @test qe.atom_labels == atom_labels
 
     recip_lattice = [
-        -1.1570114348285685 1.1570114348285685 1.1570114348285685
-        1.1570114348285685 -1.1570114348285685 1.1570114348285685
-        1.1570114348285685 1.1570114348285685 -1.1570114348285685
+        [-1.1570114348285685, 1.1570114348285685, 1.1570114348285685],
+        [1.1570114348285685, -1.1570114348285685, 1.1570114348285685],
+        [1.1570114348285685, 1.1570114348285685, -1.1570114348285685]
     ]
     @test qe.recip_lattice ≈ recip_lattice
 
@@ -73,20 +73,20 @@ end
 
 @testset "read qe xml spin-polarized" begin
     using LazyArtifacts
-    using QuantumEspressoIO: Vec3
+    using StaticArrays
 
     rootpath = artifact"CrI3"
     path_tst_data = joinpath(rootpath, "cri3_bands.xml")
     qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
 
     lattice = [
-        6.8171434485254725 -3.4085717242627362 0.0
-        0.0 5.903819407666132 0.0
-        0.0 0.0 20.078373841305446
+        [6.8171434485254725, -3.4085717242627362, 0.0]
+        [0.0, 5.903819407666132, 0.0]
+        [0.0, 0.0, 20.078373841305446]
     ]
     @test qe.lattice ≈ lattice
 
-    atom_positions = Vec3[
+    atom_positions = [
         [0.33333333330000003, 0.6666666667000001, 0.0],
         [0.6666666667, 0.3333333332999999, 0.0],
         [-2.7755575615628914e-17, 0.35410773599999995, 0.0769313053],
@@ -102,14 +102,14 @@ end
     @test qe.atom_labels == atom_labels
 
     recip_lattice = [
-        0.921674210704576 0.0 0.0
-        0.532128853655385 1.0642577073107704 0.0
-        0.0 0.0 0.31293297738354436
+        [0.921674210704576, 0.0, 0.0]
+        [0.532128853655385, 1.0642577073107704, 0.0]
+        [0.0, 0.0, 0.31293297738354436]
     ]
     @test qe.recip_lattice ≈ recip_lattice
 
     @test length(qe.kpoints) == 274
-    kpoint2 = Vec3(0.0, 0.0049999999999999975, 0.0)
+    kpoint2 = [0.0, 0.0049999999999999975, 0.0]
     @test qe.kpoints[2] ≈ kpoint2
 
     @test length(qe.eigenvalues_up) == 274
