@@ -1,44 +1,60 @@
 using StaticArrays
 
-# """
-# 3 x 3 matrix type.
+"""
+Length-3 vector type.
 
-# For lattice and recip_lattice.
-# """
-# const Mat3{T} = SMatrix{3,3,T,9} where {T}
+For atom positions, kpoints, etc.
+"""
+const Vec3{T} = SVector{3,T} where {T}
 
-# """
-# Length-3 vector type.
+vec3(v::Vec3) = v
+vec3(v::AbstractVector) = Vec3(v)
 
-# For atom posistions, kpoints, etc.
-# """
-# const Vec3{T} = SVector{3,T} where {T}
+"""
+3 x 3 matrix type.
 
-# """
-# `Vector{Vector}` -> `Mat3`
-# """
-# Mat3(A::AbstractVector) = Mat3(reduce(hcat, A))
+For lattice and reciprocal lattice.
+"""
+const Mat3{T} = SMatrix{3,3,T,9} where {T}
 
-# """
-# `Mat3` -> `Vec3{Vec3}`
-# """
-# Vec3(A::Mat3) = Vec3(eachcol(A))
+mat3(A::Mat3) = A
+mat3(A::AbstractMatrix) = Mat3(A)
 
-# """
-# Pair type associating a `Symbol` with a `Vec3`.
+"""
+    $(SIGNATURES)
 
-# For win file `atoms_frac` and `kpoint_path`.
-# """
-# const SymbolVec3{T} = Pair{Symbol,Vec3{T}} where {T}
+Convert `Vector{Vector}` to `Mat3`. Each vector is a column of the matrix.
 
-# SymbolVec3(s, v) = SymbolVec3{eltype(v)}(s, v)
-# SymbolVec3(s::AbstractString, v) = SymbolVec3(Symbol(s), v)
-# SymbolVec3(p::Pair) = SymbolVec3(p.first, p.second)
-# SymbolVec3(d::Dict) = SymbolVec3(only(d))
+!!! note
 
+    This is not defined as a constructor of `Mat3` to avoid type piracy.
+"""
+mat3(A::AbstractVector) = Mat3(reduce(hcat, A))
+
+"""
+    $(SIGNATURES)
+
+Convert `Mat3` to `Vec3{Vec3}`. Each column of the matrix is a vector.
+
+!!! note
+
+    This is not defined as a constructor of `vec3` to avoid type piracy.
+"""
+vec3(A::Mat3) = Vec3(eachcol(A))
+
+"""
+Pair type associating a `Symbol` with a `Vec3`.
+
+Used for win file `atoms_frac` and `kpoint_path`.
+"""
+const SymbolVec3{T} = Pair{Symbol,Vec3{T}} where {T}
+
+symbolvec3(s, v) = SymbolVec3{eltype(v)}(s, vec3(v))
+symbolvec3(s::AbstractString, v) = symbolvec3(Symbol(s), v)
+symbolvec3(p::Pair) = symbolvec3(p.first, p.second)
+symbolvec3(d::Dict) = symbolvec3(only(d))
 
 const StrOrSym = Union{AbstractString, Symbol}
-
 
 abstract type FileFormat end
 
