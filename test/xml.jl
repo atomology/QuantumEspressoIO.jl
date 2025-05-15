@@ -4,7 +4,7 @@
 
     rootpath = artifact"Si2"
     path_tst_data = joinpath(rootpath, "si2_bands.xml")
-    qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
+    qe = QuantumEspressoIO.read_pw_xml(path_tst_data)
 
     lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
     @test qe.lattice ≈ lattice
@@ -77,7 +77,7 @@ end
 
     rootpath = artifact"CrI3"
     path_tst_data = joinpath(rootpath, "cri3_bands.xml")
-    qe = QuantumEspressoIO.read_qe_xml(path_tst_data)
+    qe = QuantumEspressoIO.read_pw_xml(path_tst_data)
 
     lattice = [
         [6.8171434485254725, -3.4085717242627362, 0.0]
