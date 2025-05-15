@@ -9,15 +9,15 @@ export read_namelist, write_namelist
 Read a fortran namelist file.
 
 # Arguments
-- `io::IO`: The IO stream to read from.
+- `io`: The IO stream to read from.
 
-# Optional arguments 
-- `output_remaining::Bool`: If `true`, return the remaining lines in the file. Default is `false`.
+# Keyword Arguments
+- `all_lines`: Return the remaining lines outside of namelists. Default to `false`.
 
 # Returns
 - `namelists::OrderedDict`: A dictionary of namelists, each key is a symbol and
     the value is a `OrderedDict` of key-value pairs.
-- `others::Vector`: A vector of strings, which are the remaining lines in the file.
+- `others::Vector`: Optional. A vector of strings, which are the remaining lines in the file.
     For example, QE `pw.x` input files may contain "cards" for additional parameters
     (e.g. atomic positions, k-points, etc.), whose syntax are customarily defined
     by `pw.x`.
@@ -33,12 +33,12 @@ io = IOBuffer(\"""
 /
 additional line
 \""")
-namelists, others = read_namelist(io)
+namelists, others = read_namelist(io; all_lines=true)
 # output
 (OrderedCollections.OrderedDict{Symbol, Any}(:input => OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true)), ["additional line"])
 ```
 """
-function read_namelist(io::IO; output_remaining::Bool = false)
+function read_namelist(io::IO; all_lines::Bool=false)
     namelists = OrderedDict{Symbol, Any}()
     others = String[]
 
@@ -76,17 +76,20 @@ function read_namelist(io::IO; output_remaining::Bool = false)
         end
     end
 
-    if output_remaining
+    if all_lines
         return namelists, others
     else
+        if !isempty(others)
+            @warn "$(length(others)) remaining lines are ignored: $(others[1])\n...\n$(others[end])"
+        end
         return namelists
     end
 
 end
 
-function read_namelist(filename::AbstractString, output_remaining::Bool=false)
+function read_namelist(filename::AbstractString; kwargs...)
     return open(filename) do io
-        read_namelist(io, output_remaining=output_remaining)
+        read_namelist(io; kwargs...)
     end
 end
 

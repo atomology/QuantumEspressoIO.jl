@@ -1,74 +1,77 @@
 using LinearAlgebra
 
 """
-Convert crystall coordinates to Cartesian based on lattice matrix.
+    $(SIGNATURES)
+
+Convert fractional to Cartesian coordinates based on lattice vectors.
+
+# Arguments
+- `lattice`: Each element is a lattice vector.
+- `vec`: a vector or a list of vectors in fractional coordinates.
 
 # Examples
-```jldoctest; setup = :(using QuantumEspressoIO: crystal2cart)
-julia> lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
-julia> crystal2cart(lattice, [0.25, 0.25, 0.25])
-3-element StaticArraysCore.SVector{3, Float64} with indices SOneTo(3):
- 1.3576325
- 1.3576325
- 1.3576325
+```jldoctest frac2cart; setup = :(using QuantumEspressoIO: frac2cart)
+lattice = [[0.0, 1.0, 2.0], [3.0, 0.0, 4.0], [5.0, 6.0, 0.0]];
+positions = [[0.1, 0.2, 0.3], [1.0, 2.0, 3.0]];
+frac2cart(lattice, positions[1])
+# output
+3-element Vector{Float64}:
+ 2.1
+ 1.9
+ 1.0
+```
+```jldoctest frac2cart
+frac2cart(lattice, positions)
+# output
+2-element Vector{Vector{Float64}}:
+ [2.1, 1.9, 1.0]
+ [21.0, 19.0, 10.0]
 ```
 """
-function crystal2cart(lattice::AbstractVector{<:AbstractVector}, crystal_coord::AbstractVector{<:Real})
-    cart_coord =  Vec3(map(row -> dot(row, crystal_coord), lattice)) # in Angstrom if was read from read_pw_xml 
-    return  cart_coord
+function frac2cart end
+
+function frac2cart(lattice::AbstractVector{<:AbstractVector}, vecs::AbstractVector{<:AbstractVector})
+    mat = reduce(hcat, lattice)
+    carts = Ref(mat) .* vecs
+    return carts
+end
+
+function frac2cart(lattice::AbstractVector{<:AbstractVector}, vec::AbstractVector{<:Real})
+    return frac2cart(lattice, [vec])[1]
 end
 
 """
-Convert crystall coordinates of vector of atoms to Cartesian based on lattice matrix.
+    $(SIGNATURES)
+
+Convert Cartesian to fractional coordinates based on lattice vectors.
+
+# Arguments
+- `lattice`: Each element is a lattice vector.
+- `vec`: a vector or a list of vectors in Cartesian coordinates.
 
 # Examples
-```jldoctest; setup = :(using QuantumEspressoIO: crystal2cart)
-julia> lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
-julia> positions = [[0,0,0],[0.25,0.25,0.25]]
-julia> crystal2cart(lattice, positions)
-2-element Vector{SVector{3, Float64}}:
- [0.0, 0.0, 0.0]
- [1.3576325, 1.3576325, 1.3576325]
+```jldoctest cart2frac; setup = :(using QuantumEspressoIO: cart2frac, frac2cart)
+lattice = [[0.0, 1.0, 2.0], [3.0, 0.0, 4.0], [5.0, 6.0, 0.0]];
+positions = [[2.1, 1.9, 1.0], [21.0, 19.0, 10.0]];
+frac2cart(lattice, cart2frac(lattice, positions[1])) ≈ positions[1]
+# output
+true
+```
+```jldoctest cart2frac
+frac2cart(lattice, cart2frac(lattice, positions)) ≈ positions
+# output
+true
 ```
 """
-function crystal2cart(lattice::AbstractVector{<:AbstractVector}, crystal_coords::AbstractVector{<:AbstractVector})
-    cart_coords = [crystal2cart(lattice, crystal_coord) for crystal_coord in crystal_coords]
-    return  cart_coords
+function cart2frac end
+
+function cart2frac(lattice::AbstractVector{<:AbstractVector}, vecs::AbstractVector{<:AbstractVector})
+    mat = reduce(hcat, lattice)
+    inv_mat = inv(mat)
+    frac = Ref(inv_mat) .* vecs
+    return frac
 end
 
-"""
-Convert Cartesian coordinates to crystall based on lattice matrix.
-
-# Examples
-```jldoctest; setup = :(using QuantumEspressoIO: cart2crystall)
-julia> lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
-julia> cart2crystall(lattice, [1.3576325, 1.3576325, 1.3576325])
-3-element StaticArraysCore.SVector{3, Float64} with indices SOneTo(3):
- 0.25
- 0.25
- 0.25
-```
-"""
-function cart2crystall(lattice::AbstractVector{<:AbstractVector}, cart_coord::AbstractVector{<:Real})
-    lattice_mat = hcat(lattice...)'
-    inv_lattice = inv(lattice_mat)
-    return  Vec3(inv_lattice * cart_coord)
-end
-
-"""
-Convert Cartesian coordinates of vector of atoms to crystall based on lattice matrix.
-
-# Examples
-```jldoctest; setup = :(using QuantumEspressoIO: cart2crystall)
-julia> lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
-julia> positions = [[0,0,0],[1.3576325, 1.3576325, 1.3576325]]
-julia> crystal2cart(lattice, positions)
-2-element Vector{SVector{3, Float64}}:
- [0.0, 0.0, 0.0]
- [0.25, 0.25, 0.25]
-```
-"""
-function cart2crystall(lattice::AbstractVector{<:AbstractVector}, cart_coords::AbstractVector{<:AbstractVector})
-    crystal_coords =  [cart2crystall(lattice, cart_coord) for cart_coord in cart_coords]
-    return  crystal_coords
+function cart2frac(lattice::AbstractVector{<:AbstractVector}, vec::AbstractVector{<:Real})
+    return cart2frac(lattice, [vec])[1]
 end

@@ -1,6 +1,5 @@
 @testitem "read qe xml" begin
     using LazyArtifacts
-    using StaticArrays
 
     rootpath = artifact"Si2"
     path_tst_data = joinpath(rootpath, "si2_bands.xml")
@@ -73,7 +72,6 @@ end
 
 @testset "read qe xml spin-polarized" begin
     using LazyArtifacts
-    using StaticArrays
 
     rootpath = artifact"CrI3"
     path_tst_data = joinpath(rootpath, "cri3_bands.xml")
