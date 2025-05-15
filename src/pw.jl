@@ -285,7 +285,7 @@ OrderedCollections.OrderedDict{Symbol, Any}(:control => OrderedCollections.Order
 """
 function read_pw_in(io::Union{IO,AbstractString})
     # Parse the namelists
-    namelists, cards = read_namelist(io)
+    namelists, cards = read_namelist(io, return_remaining = true)
 
     # There are required parameters, also needed for parsing cards
     isnothing(get(namelists, :system, nothing)) && error("Missing namelist: system")
