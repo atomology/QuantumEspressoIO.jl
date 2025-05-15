@@ -15,7 +15,7 @@ Read atomic structure and band structure from QE's XML output.
     eigenvalue in eV. For spin-polarized but without SOC calculations,
     return two arries of `eigenvalues_up` and `eigenvalues_dn` for the two spin channels.
 """
-function read_qe_xml(filename::AbstractString)
+function read_pw_xml(filename::AbstractString)
     # from qe/Modules/constants.f90
     BOHR_RADIUS_ANGS = Bohr_QE  # Angstrom
     HARTREE_SI = 4.3597447222071e-18  # J
@@ -33,7 +33,7 @@ function read_qe_xml(filename::AbstractString)
     n_atoms = parse(Int, atomic_structure["nat"])
 
     # structure info, each column is a vector for position or lattice vector
-    atom_positions = SVector{3,Float64}[]
+    atom_positions = Vec3[]
     atom_labels = Vector{String}(undef, n_atoms)
     lattice =  zeros(3, 3)
 
@@ -50,7 +50,7 @@ function read_qe_xml(filename::AbstractString)
     # from cartesian to fractional
     inv_lattice = inv(lattice)
     atom_positions = map(atom_positions) do pos
-        SA_F64[inv_lattice * pos...]
+       Vec3(inv_lattice * pos)
     end
     # from bohr to angstrom
     lattice *= BOHR_RADIUS_ANGS
@@ -82,7 +82,7 @@ function read_qe_xml(filename::AbstractString)
         n_bands = parse(Int, findfirst("nbnd", band_structure).content)
         eigenvalues = Vector{Float64}[]
     end
-    kpoints = SVector{3,Float64}[]
+    kpoints = Vec3[]
 
     n_electrons = parse(Float64, findfirst("nelec", band_structure).content)
     fermi_energy = parse(Float64, findfirst("fermi_energy", band_structure).content)
@@ -116,8 +116,8 @@ function read_qe_xml(filename::AbstractString)
     end
 
     # Convert to vector of SVectors [v1,v2,v3]
-    lattice = SVector{3,Float64}[SA_F64[lattice[:, i]...] for i in 1:3]
-    recip_lattice = SVector{3,Float64}[SA_F64[recip_lattice[:, i]...] for i in 1:3]
+    lattice = Vec3[lattice[:, i] for i in 1:3]
+    recip_lattice = Vec3[recip_lattice[:, i] for i in 1:3]
 
     results = (;
         lattice,
