@@ -96,7 +96,7 @@ function read_atomic_positions!(lines::AbstractVector, n_atoms::Integer)
     option, content = result
 
     atoms = String[]
-    positions = Vec3[]
+    positions = Vec3{Float64}[]
     for line in content
         at, x, y, z = split(line)
         push!(atoms, at)
@@ -143,7 +143,7 @@ function read_cell_parameters!(lines::AbstractVector)
     isnothing(result) && return nothing
     option, content = result
 
-    cell =Vec3[]
+    cell = Vec3{Float64}[]
     for line in content
         push!(cell, Vec3(parse_float.(split(line))))
     end
@@ -210,7 +210,7 @@ function read_k_points!(lines::AbstractVector)
         n_lines = nkpts + 1
         content = parse_card!(lines, name, n_lines)[2]
         deleteat!(content, 1)
-        kpoints = Vec3[]
+        kpoints = Vec3{Float64}[]
         kweights = Float64[]
         for line in content
             parts = parse_float.(split(line))
@@ -285,7 +285,7 @@ OrderedCollections.OrderedDict{Symbol, Any}(:control => OrderedCollections.Order
 """
 function read_pw_in(io::Union{IO,AbstractString})
     # Parse the namelists
-    namelists, cards = read_namelist(io, return_remaining = true)
+    namelists, cards = read_namelist(io; all_lines=true)
 
     # There are required parameters, also needed for parsing cards
     isnothing(get(namelists, :system, nothing)) && error("Missing namelist: system")

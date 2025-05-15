@@ -35,7 +35,7 @@ function read_pw_xml(filename::AbstractString)
     # structure info, each column is a vector for position or lattice vector
     atom_positions = Vec3[]
     atom_labels = Vector{String}(undef, n_atoms)
-    lattice =  zeros(3, 3)
+    lattice = zeros(3, 3)
 
     for (i, atom) in enumerate(eachelement(findfirst("atomic_positions", atomic_structure)))
         pos = parse.(Float64, split(atom.content))
@@ -50,7 +50,7 @@ function read_pw_xml(filename::AbstractString)
     # from cartesian to fractional
     inv_lattice = inv(lattice)
     atom_positions = map(atom_positions) do pos
-       Vec3(inv_lattice * pos)
+        Vec3(inv_lattice * pos)
     end
     # from bohr to angstrom
     lattice *= BOHR_RADIUS_ANGS
@@ -115,9 +115,9 @@ function read_pw_xml(filename::AbstractString)
         end
     end
 
-    # Convert to vector of SVectors [v1,v2,v3]
-    lattice = Vec3[lattice[:, i] for i in 1:3]
-    recip_lattice = Vec3[recip_lattice[:, i] for i in 1:3]
+    # Convert to vector of SVectors [v1, v2, v3]
+    lattice = vec3.(eachcol(lattice))
+    recip_lattice = vec3.(eachcol(recip_lattice))
 
     results = (;
         lattice,
