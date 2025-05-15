@@ -11,6 +11,9 @@ Read a fortran namelist file.
 # Arguments
 - `io::IO`: The IO stream to read from.
 
+# Optional arguments 
+- `output_remaining::Bool`: If `true`, return the remaining lines in the file. Default is `false`.
+
 # Returns
 - `namelists::OrderedDict`: A dictionary of namelists, each key is a symbol and
     the value is a `OrderedDict` of key-value pairs.
@@ -35,7 +38,7 @@ namelists, others = read_namelist(io)
 (OrderedCollections.OrderedDict{Symbol, Any}(:input => OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true)), ["additional line"])
 ```
 """
-function read_namelist(io::IO)
+function read_namelist(io::IO; output_remaining::Bool = false)
     namelists = OrderedDict{Symbol, Any}()
     others = String[]
 
@@ -73,12 +76,17 @@ function read_namelist(io::IO)
         end
     end
 
-    return namelists, others
+    if output_remaining
+        return namelists, others
+    else
+        return namelists
+    end
+
 end
 
-function read_namelist(filename::AbstractString)
+function read_namelist(filename::AbstractString, output_remaining::Bool=false)
     return open(filename) do io
-        read_namelist(io)
+        read_namelist(io, output_remaining=output_remaining)
     end
 end
 
