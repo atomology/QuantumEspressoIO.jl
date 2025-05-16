@@ -1,12 +1,12 @@
 using Printf
 using OrderedCollections
 
-export read_namelist, write_namelist
+export read_namelist, read_namelists, write_namelist, write_namelists
 
 """
     $(SIGNATURES)
 
-Read a fortran namelist file.
+Read fortran namelists file.
 
 # Arguments
 - `io`: The IO stream to read from.
@@ -23,7 +23,7 @@ Read a fortran namelist file.
     by `pw.x`.
 
 # Examples
-```jldoctest; setup = :(using QuantumEspressoIO: read_namelist)
+```jldoctest; setup = :(using QuantumEspressoIO: read_namelists)
 io = IOBuffer(\"""
 &input
     a = 1
@@ -33,12 +33,12 @@ io = IOBuffer(\"""
 /
 additional line
 \""")
-namelists, others = read_namelist(io; all_lines=true)
+namelists, others = read_namelists(io; all_lines=true)
 # output
 (OrderedCollections.OrderedDict{Symbol, Any}(:input => OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true)), ["additional line"])
 ```
 """
-function read_namelist(io::IO; all_lines::Bool=false)
+function read_namelists(io::IO; all_lines::Bool=false)
     namelists = OrderedDict{Symbol, Any}()
     others = String[]
 
@@ -87,9 +87,56 @@ function read_namelist(io::IO; all_lines::Bool=false)
 
 end
 
-function read_namelist(filename::AbstractString; kwargs...)
+function read_namelists(filename::AbstractString; kwargs...)
     return open(filename) do io
-        read_namelist(io; kwargs...)
+        read_namelists(io; kwargs...)
+    end
+end
+
+"""
+    $(SIGNATURES)
+
+Read a single Fortran namelist from a file or IO stream.
+
+# Arguments
+- `io_or_filename`: The IO stream or filename to read from.
+- `name`: The name of the namelist to read.
+
+# Keyword Arguments
+- `all_lines`: Return the remaining lines outside of the namelist. Default to `false`.
+
+# Returns
+- `params`: The key-value pairs of the namelist.
+- `others`: Optional. A vector of strings, which are the remaining lines in the file.
+
+# Examples
+```jldoctest; setup = :(using QuantumEspressoIO: read_namelist)
+io = IOBuffer(\"""
+&input
+    a = 1
+    b = 2.0
+    c = 'test'
+    d = .true.
+/
+additional line
+\""")
+namelist, others = read_namelist(io, "input"; all_lines=true)
+# output
+(OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true), ["additional line"])
+```
+"""
+function read_namelist(io_or_filename::Union{IO,AbstractString}, name::StrOrSym; all_lines::Bool=false)
+    if all_lines
+        namelists, others = read_namelists(io_or_filename; all_lines)
+    else
+        namelists = read_namelists(io_or_filename; all_lines)
+    end
+    params = get(namelists, Symbol(name), nothing)
+    isnothing(params) && error("Namelist $name not found")
+    if all_lines
+        return params, others
+    else
+        return params
     end
 end
 
@@ -268,9 +315,9 @@ end
 Write a Fortran namelist to a file.
 
 # Arguments
-- `filename::AbstractString`: The name of the file to write to.
-- `name::StrOrSym`: The name of the namelist.
-- `params::AbstractDict`: The key-value pairs to write, which is a dictionary-like object.
+- `filename`: The name of the file to write to.
+- `name`: The name of the namelist.
+- `params`: The key-value pairs to write, which is a dictionary-like object.
 """
 function write_namelist(filename::AbstractString, name::StrOrSym, params::AbstractDict)
     return open(filename, "w") do io
@@ -287,11 +334,11 @@ end
 """
     $(SIGNATURES)
 
-Generic writer for QE input namelist.
+Write multiple Fortran namelists to a file.
 
 # Arguments
-- `io::IO`: The IO stream to write to.
-- `inputs::AbstractDict`: The input parameters, each key-value pair is treated as a namelist.
+- `io`: The IO stream to write to.
+- `namelists`: The namelists, each key-value pair is treated as a namelist.
 
 # Examples
 ```jldoctest
@@ -303,7 +350,7 @@ inputs = OrderedDict(
     :system => OrderedDict("ecutwfc" => 30.0, "ecutrho" => 300.0),
     :electrons => OrderedDict("mixing_beta" => 0.7),
 )
-write_namelist(stdout, inputs)
+write_namelists(stdout, inputs)
 # output
 &control
   calculation = 'scf'
@@ -318,23 +365,23 @@ write_namelist(stdout, inputs)
 /
 ```
 """
-function write_namelist(io::IO, inputs::AbstractDict)
-    for (name, namelist) in pairs(inputs)
-        write_namelist(io, name, namelist)
+function write_namelists(io::IO, namelists::AbstractDict)
+    for (name, nml) in pairs(namelists)
+        write_namelist(io, name, nml)
     end
 end
 
 """
     $(SIGNATURES)
 
-Generic writer for QE input namelist to a file.
+Write multiple Fortran namelists to a file.
 
 # Arguments
 - `filename::AbstractString`: The name of the file to write to.
-- `inputs::AbstractDict`: The input parameters, see [`write_namelist(io::IO, inputs::AbstractDict)`](@ref) for details.
+- `namelists::AbstractDict`: The input parameters, see [`write_namelists(io::IO, namelists::AbstractDict)`](@ref) for details.
 """
-function write_namelist(filename::AbstractString, inputs::AbstractDict)
+function write_namelists(filename::AbstractString, namelists::AbstractDict)
     return open(filename, "w") do io
-        write_namelist(io, inputs)
+        write_namelists(io, namelists)
     end
 end
