@@ -17,8 +17,9 @@ Pages = [
 ```@autodocs
 Modules = [QuantumEspressoIO]
 Pages = [
-    "common/const.jl",
-    "common/type.jl",
+    "common/lattice.jl",
     "common/fortran.jl",
+    "common/type.jl",
+    "common/const.jl",
 ]
 ```
