@@ -449,7 +449,7 @@ function write_k_points(io::IO, card::AbstractDict)
         end
     elseif loption in valid_options_auto
         # automatic kpoints
-        @printf(io, "%d %d %d    %f %f %f\n", card[:kgrid]..., card[:kgrid_shift]...)
+        @printf(io, "%d %d %d    %d %d %d\n", card[:kgrid]..., card[:kgrid_shift]...)
     elseif loption in valid_options_gamma
         # gamma point, nothing to do
     else
@@ -601,5 +601,33 @@ Write the `pw.x` input file to a file.
 function write_pw_in(filename::AbstractString, inputs::AbstractDict)
     return open(filename, "w") do io
         write_pw_in(io, inputs)
+    end
+end
+
+"""
+Read relaxed structures from stdout file of `pw.x`.
+"""
+function read_structures(filename::AbstractString)
+    return open(filename) do io
+        natoms = -1
+        cell_parameters = []
+        atomic_positions = []
+
+        while !eof(io)
+            line = readline(io)
+            if occursin("number of atoms/cell      =", line)
+                natoms = parse(Int, strip(split(line, "=")[end]))
+            elseif startswith(line, "CELL_PARAMETERS")
+                lines = [line, [readline(io) for _ in 1:3]...]
+                push!(cell_parameters, last(read_cell_parameters!(lines)))
+            elseif startswith(line, "ATOMIC_POSITIONS")
+                (natoms >= 0) || error("Expected `number of atoms/cell` line before ATOMIC_POSITIONS card")
+                lines = [line, [readline(io) for _ in 1:natoms]...]
+                card = last(read_atomic_positions!(lines, natoms))
+                push!(atomic_positions, card)
+            end
+        end
+
+        return cell_parameters, atomic_positions
     end
 end
