@@ -1,4 +1,5 @@
 using OrderedCollections
+using DelimitedFiles
 
 """
     $(SIGNATURES)
@@ -139,4 +140,103 @@ function read_projwfc_up(filename::AbstractString)
     return open(filename) do io
         read_projwfc_up(io)
     end
+end
+
+"""
+    read_projwfc_dos(io)
+
+Read `projwfc.x` total PDOS (e.g. `qe.pdos_tot`) or atom-projected file
+(e.g. `qe.pdos_atm#1(Si)_wfc#1(s)`).
+
+# Arguments
+- `io` or `filename`: An IO stream or a filename to read the DOS data from.
+
+# Returns
+- `columns::Matrix{Float64}`: A matrix containing the DOS data.
+- `header::Vector{String}`: A vector containing the first line of the file.
+"""
+function read_projwfc_dos(io::IO)
+    header = readline(io)
+    header = strip(chopprefix(header, "#"))
+    EeV = "E (eV)"
+    if startswith(header, EeV)
+        header = chopprefix(header, EeV)
+        header = strip(header)
+    else
+        error("Expected header to start with '$EeV', got '$header'")
+    end
+    header = String[EeV, split(header)...]
+    columns = readdlm(io, Float64; comments=true)
+    return columns, header
+end
+
+function read_projwfc_dos(filename::AbstractString)
+    return open(filename) do io
+        read_projwfc_dos(io)
+    end
+end
+
+"""
+    read_pdos_tot(io)
+
+Read `projwfc.x` total PDOS file.
+
+# Arguments
+- `prefix::AbstractString`: The prefix of the PDOS file (e.g., `qe` for `qe.pdos_tot`).
+
+# Returns
+- `columns::Matrix{Float64}`: A matrix containing the PDOS data.
+- `header::Vector{String}`: A vector containing the first line of the file.
+"""
+function read_pdos_tot(prefix::AbstractString)
+    filename = "$prefix.pdos_tot"
+    return read_projwfc_dos(filename)
+end
+
+"""
+    read_pdos_atm(prefix::AbstractString)
+
+Read all the atom-projected PDOS files.
+
+# Arguments
+- `prefix::AbstractString`: The prefix of the PDOS files
+    (e.g., `qe` for `qe.pdos_atm#1(Si)_wfc#1(s)`).
+
+# Returns
+- PDOS as a vector, which is ordered according to the atom index. Each element
+  of the vector is a tuple with the following fields:
+  - `atom_index::Int`: Index of the atom (1-based).
+  - `atom_label::String`: Label of the atom.
+  - `pdos`: A vector of named tuples, each containing:
+    - `wfc_index::Int`: Index of the wavefunction.
+    - `wfc_label::String`: Label of the wavefunction.
+    - `columns::Matrix{Float64}`: The PDOS data matrix.
+    - `header::Vector{String}`: The header of the PDOS file.
+"""
+function read_pdos_atm(prefix::AbstractString)
+    dir, name = dirname(prefix), basename(prefix)
+    isempty(dir) && (dir = ".")
+    files = readdir(dir)
+    regex = Regex(name * raw"\.pdos_atm#(\d+)\((.+)\)_wfc#(\d+)\((.+)\)")
+    # files = filter(Base.Fix2(startswith, "$name.pdos_atm"), files)
+    files = filter(f -> occursin(regex, f), files)
+    atom_indices = map(files) do f
+        parse(Int, match(regex, f).captures[1])
+    end
+    natoms = length(unique(atom_indices))
+    res = map(1:natoms) do i
+        files_i = files[atom_indices .== i]
+        atom_label = match(regex, files_i[1]).captures[2]
+        wfc_indices = map(f -> parse(Int, match(regex, f).captures[3]), files_i)
+        nwfcs_i = length(files_i)
+        res = map(1:nwfcs_i) do j
+            file = only(files_i[wfc_indices .== j])
+            wfc_label = match(regex, file).captures[4]
+            # Each pdos file has the same format as pdos_tot file
+            columns, header = read_projwfc_dos(joinpath(dir, file))
+            return (; wfc_index=j, wfc_label, columns, header)
+        end
+        return (; atom_index=i, atom_label, pdos=res)
+    end
+    return res
 end
