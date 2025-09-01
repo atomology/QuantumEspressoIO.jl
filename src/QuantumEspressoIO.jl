@@ -15,4 +15,6 @@ include("bin.jl")
 include("band.jl")
 include("projwfc.jl")
 
+include("matdyn.jl")
+
 end
