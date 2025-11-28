@@ -1,8 +1,9 @@
 using Documenter, QuantumEspressoIO
 DocMeta.setdocmeta!(
     QuantumEspressoIO,
-    :DocTestSetup, :(using QuantumEspressoIO);
-    recursive=true,
+    :DocTestSetup,
+    :(using QuantumEspressoIO);
+    recursive = true,
 )
 doctest(
     QuantumEspressoIO,

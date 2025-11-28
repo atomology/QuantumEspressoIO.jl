@@ -109,7 +109,10 @@ frac2cart(lattice, positions)
 """
 function frac2cart end
 
-function frac2cart(lattice::AbstractVector{<:AbstractVector}, vecs::AbstractVector{<:AbstractVector})
+function frac2cart(
+    lattice::AbstractVector{<:AbstractVector},
+    vecs::AbstractVector{<:AbstractVector},
+)
     mat = reduce(hcat, lattice)
     carts = Ref(mat) .* vecs
     return carts
@@ -146,7 +149,10 @@ true
 """
 function cart2frac end
 
-function cart2frac(lattice::AbstractVector{<:AbstractVector}, vecs::AbstractVector{<:AbstractVector})
+function cart2frac(
+    lattice::AbstractVector{<:AbstractVector},
+    vecs::AbstractVector{<:AbstractVector},
+)
     mat = reduce(hcat, lattice)
     inv_mat = inv(mat)
     frac = Ref(inv_mat) .* vecs

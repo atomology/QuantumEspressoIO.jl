@@ -49,7 +49,7 @@ function read_atomic_species!(lines::AbstractVector, n_species::Integer)
         push!(pseudos, ps)
     end
 
-    card = OrderedDict{Symbol, Any}()
+    card = OrderedDict{Symbol,Any}()
     card[:option] = option
     card[:species] = species
     card[:masses] = masses
@@ -103,7 +103,7 @@ function read_atomic_positions!(lines::AbstractVector, n_atoms::Integer)
         push!(positions, Vec3(parse_float.([x, y, z])))
     end
 
-    card = OrderedDict{Symbol, Any}()
+    card = OrderedDict{Symbol,Any}()
     card[:option] = option
     card[:atoms] = atoms
     card[:positions] = positions
@@ -148,7 +148,7 @@ function read_cell_parameters!(lines::AbstractVector)
         push!(cell, Vec3(parse_float.(split(line))))
     end
 
-    card = OrderedDict{Symbol, Any}()
+    card = OrderedDict{Symbol,Any}()
     card[:option] = option
     card[:cell] = cell
 
@@ -196,7 +196,7 @@ function read_k_points!(lines::AbstractVector)
     option = parse_card_option(lines[icard])
     loption = lowercase(option)
 
-    card = OrderedDict{Symbol, Any}()
+    card = OrderedDict{Symbol,Any}()
     card[:option] = option
 
     # Possible options from pw.x input description:
@@ -285,7 +285,7 @@ OrderedCollections.OrderedDict{Symbol, Any}(:control => OrderedCollections.Order
 """
 function read_pw_in(io::Union{IO,AbstractString})
     # Parse the namelists
-    namelists, cards = read_namelists(io; all_lines=true)
+    namelists, cards = read_namelists(io; all_lines = true)
 
     # There are required parameters, also needed for parsing cards
     isnothing(get(namelists, :system, nothing)) && error("Missing namelist: system")
@@ -431,7 +431,8 @@ function write_k_points(io::IO, card::AbstractDict)
     option = get(card, :option, "")
     loption = lowercase(option)
 
-    valid_options_list = ["tpiba", "crystal", "tpiba_b", "crystal_b", "tpiba_c", "crystal_c"]
+    valid_options_list =
+        ["tpiba", "crystal", "tpiba_b", "crystal_b", "tpiba_c", "crystal_c"]
     valid_options_auto = ["automatic"]
     valid_options_gamma = ["gamma"]
     valid_options = vcat(valid_options_list, valid_options_auto, valid_options_gamma)
@@ -553,7 +554,7 @@ K_POINTS crystal
 ```
 """
 function write_pw_in(io::IO, inputs::AbstractDict)
-    valid_namelists = [:control, :system, :electrons, :ions, :cell, :fcp, :rism,]
+    valid_namelists = [:control, :system, :electrons, :ions, :cell, :fcp, :rism]
     valid_cards = OrderedDict{Symbol,Function}(
         :atomic_species => write_atomic_species,
         :atomic_positions => write_atomic_positions,

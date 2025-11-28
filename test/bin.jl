@@ -14,6 +14,6 @@
     norm11 = abs(calculate_braket(evc_list[1], evc_list[1]))
     norm12 = abs(calculate_braket(evc_list[1], evc_list[2]))
 
-    @test isapprox(norm11, 1.0; atol=thr)
-    @test isapprox(norm12, 0.0; atol=thr)
+    @test isapprox(norm11, 1.0; atol = thr)
+    @test isapprox(norm12, 0.0; atol = thr)
 end

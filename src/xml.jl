@@ -43,7 +43,7 @@ function read_pw_xml(filename::AbstractString)
         atom_labels[i] = atom["name"]
     end
     # lattice
-    for i in 1:3
+    for i = 1:3
         a = findfirst("cell/a$i", atomic_structure)
         lattice[:, i] = parse.(Float64, split(a.content))
     end
@@ -57,7 +57,7 @@ function read_pw_xml(filename::AbstractString)
 
     # reciprocal lattice
     recip_lattice = zeros(3, 3)
-    for i in 1:3
+    for i = 1:3
         b = findfirst("basis_set/reciprocal_lattice/b$i", output)
         recip_lattice[:, i] = parse.(Float64, split(b.content))
     end
@@ -106,7 +106,7 @@ function read_pw_xml(filename::AbstractString)
             # Hartree to eV
             e .*= AUTOEV
             push!(eigenvalues_up, e[1:n_bands])
-            push!(eigenvalues_dn, e[(n_bands + 1):end])
+            push!(eigenvalues_dn, e[(n_bands+1):end])
         else
             e = parse.(Float64, split(qe_eigenvalues.content))
             # Hartree to eV

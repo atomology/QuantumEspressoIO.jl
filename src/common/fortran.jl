@@ -117,7 +117,7 @@ function parse_value(value::AbstractString)
     str_signs = ["'", '"']
     for s in str_signs
         if startswith(value, s) && endswith(value, s)
-            return value[2:end-1]
+            return value[2:(end-1)]
         end
     end
 
@@ -169,7 +169,7 @@ function remove_comment(line::AbstractString)
     # This also works for inline comments
     for s in comment_signs
         if occursin(s, line)
-            return strip(split(line, s; limit=2)[1])
+            return strip(split(line, s; limit = 2)[1])
         end
     end
 

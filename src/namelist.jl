@@ -38,8 +38,8 @@ namelists, others = read_namelists(io; all_lines=true)
 (OrderedCollections.OrderedDict{Symbol, Any}(:input => OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true)), ["additional line"])
 ```
 """
-function read_namelists(io::IO; all_lines::Bool=false)
-    namelists = OrderedDict{Symbol, Any}()
+function read_namelists(io::IO; all_lines::Bool = false)
+    namelists = OrderedDict{Symbol,Any}()
     others = String[]
 
     current_namelist = nothing
@@ -54,7 +54,7 @@ function read_namelists(io::IO; all_lines::Bool=false)
             # Parse namelist
             # fortran is case-insensitive, so we convert to lowercase
             name = Symbol(lowercase(line[2:end]))
-            namelists[name] = OrderedDict{Symbol, Any}()
+            namelists[name] = OrderedDict{Symbol,Any}()
             current_namelist = name
         elseif startswith(line, "/")
             # End of namelist
@@ -64,7 +64,7 @@ function read_namelists(io::IO; all_lines::Bool=false)
             end
         elseif current_namelist !== nothing
             # Parse key-value pairs
-            key_value_pairs = split(line, "="; limit=2)
+            key_value_pairs = split(line, "="; limit = 2)
             # fortran is case-insensitive, so we convert to lowercase
             key = Symbol(lowercase(strip(key_value_pairs[1])))
             # to be safe, we still keep the case of value unchanged
@@ -125,7 +125,11 @@ namelist, others = read_namelist(io, "input"; all_lines=true)
 (OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true), ["additional line"])
 ```
 """
-function read_namelist(io_or_filename::Union{IO,AbstractString}, name::StrOrSym; all_lines::Bool=false)
+function read_namelist(
+    io_or_filename::Union{IO,AbstractString},
+    name::StrOrSym;
+    all_lines::Bool = false,
+)
     if all_lines
         namelists, others = read_namelists(io_or_filename; all_lines)
     else
@@ -168,10 +172,7 @@ find_card(lines, name)
 """
 function find_card(lines::AbstractVector, name::AbstractString)
     lname = lowercase(name)
-    return findfirst(
-        line -> startswith(lowercase(remove_comment(line)), lname),
-        lines,
-    )
+    return findfirst(line -> startswith(lowercase(remove_comment(line)), lname), lines)
 end
 
 """
@@ -193,8 +194,8 @@ julia> parse_card_option("POSITIONS angstrom  ! comment")
 """
 @inline function parse_card_option(line::AbstractString)
     cardline = remove_comment(line)
-    parts = split(cardline; limit=2)
-    option =  length(parts) < 2 ? nothing : parts[2]
+    parts = split(cardline; limit = 2)
+    option = length(parts) < 2 ? nothing : parts[2]
     return option
 end
 
@@ -228,7 +229,11 @@ println(lines)
 ["  name2 = value2"]
 ```
 """
-function parse_card!(lines::AbstractVector, name::AbstractString, n_lines::Union{Integer,Nothing}=nothing)
+function parse_card!(
+    lines::AbstractVector,
+    name::AbstractString,
+    n_lines::Union{Integer,Nothing} = nothing,
+)
     istart = find_card(lines, name)
     # nothing found
     isnothing(istart) && return nothing
