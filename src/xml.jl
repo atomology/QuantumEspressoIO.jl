@@ -115,6 +115,20 @@ function read_pw_xml(filename::AbstractString)
         end
     end
 
+    # total energy
+    energies = findfirst("total_energy", output)
+    total_energy = parse(Float64, findfirst("etot", energies).content) * AUTOEV # in eV
+
+    # convergence and timing
+    convergence = findfirst("convergence_info", output)
+    scf_conv = findfirst("scf_conv", convergence)
+    converged = parse(Bool, findfirst("convergence_achieved", scf_conv).content)
+    
+    timing = findfirst("/qes:espresso/timing_info", root(doc))
+    total_time = findfirst("total", timing)
+    wall_time = parse(Float64, findfirst("wall", total_time).content) # in seconds
+
+
     # Convert to vector of SVectors [v1, v2, v3]
     lattice = vec3.(eachcol(lattice))
     recip_lattice = vec3.(eachcol(recip_lattice))
@@ -128,6 +142,9 @@ function read_pw_xml(filename::AbstractString)
         n_electrons,
         fermi_energy,
         alat,
+        total_energy,
+        converged,
+        wall_time,
     )
     if lsda && !spinorbit
         return (; results..., eigenvalues_up, eigenvalues_dn)

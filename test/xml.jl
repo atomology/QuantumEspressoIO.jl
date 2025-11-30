@@ -119,4 +119,10 @@ end
     @test qe.eigenvalues_dn[2][1:3] ≈ eigenvalues_dn2
 
     @test qe.fermi_energy ≈ -4.819375066024118
+
+    @test qe.total_energy = 0.0
+
+    @test qe.converged = true
+
+    @test qe.wall_time = 4.961894057035448e3
 end
