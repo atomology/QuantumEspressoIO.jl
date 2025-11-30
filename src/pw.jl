@@ -449,7 +449,7 @@ function write_k_points(io::IO, card::AbstractDict)
         end
     elseif loption in valid_options_auto
         # automatic kpoints
-        @printf(io, "%d %d %d    %d %d %d\n", card[:kgrid]..., card[:kgrid_shift]...)
+        @printf(io, "%d %d %d    %f %f %f\n", card[:kgrid]..., card[:kgrid_shift]...)
     elseif loption in valid_options_gamma
         # gamma point, nothing to do
     else
