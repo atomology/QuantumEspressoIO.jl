@@ -426,6 +426,18 @@ K_POINTS crystal
     0.0000000000      0.0000000000      0.0000000000      1.0000000000
     0.5000000000      0.5000000000      0.5000000000      1.0000000000
 ```
+
+```jldoctest; setup = :(using QuantumEspressoIO: write_k_points)
+inputs = Dict(
+    :option => "automatic",
+    :kgrid => [8, 8, 8],
+    :kgrid_shift => [0, 1, 1],
+)
+write_k_points(stdout, inputs)
+# output
+K_POINTS automatic
+8 8 8    0 1 1
+```
 """
 function write_k_points(io::IO, card::AbstractDict)
     option = get(card, :option, "")
@@ -449,7 +461,7 @@ function write_k_points(io::IO, card::AbstractDict)
         end
     elseif loption in valid_options_auto
         # automatic kpoints
-        @printf(io, "%d %d %d    %f %f %f\n", card[:kgrid]..., card[:kgrid_shift]...)
+        @printf(io, "%d %d %d    %d %d %d\n", card[:kgrid]..., card[:kgrid_shift]...)
     elseif loption in valid_options_gamma
         # gamma point, nothing to do
     else
