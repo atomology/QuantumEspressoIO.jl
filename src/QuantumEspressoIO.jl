@@ -14,5 +14,6 @@ include("xml.jl")
 include("bin.jl")
 include("band.jl")
 include("projwfc.jl")
+include("opengrid.jl")
 
 end
