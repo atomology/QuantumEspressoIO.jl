@@ -185,8 +185,7 @@ println(lines)
 ["following line"]
 ```
 """
-function read_k_points!(lines::AbstractVector)
-    name = "k_points"
+function read_k_points!(lines::AbstractVector; name::AbstractString="k_points")
     # kpoints has variable number of lines,
     # the number of lines is indicated by the card option
     icard = find_card(lines, name)
@@ -307,6 +306,9 @@ function read_pw_in(io::Union{IO,AbstractString})
     isnothing(card) || push!(params, card)
 
     card = read_k_points!(cards)
+    isnothing(card) || push!(params, card)
+
+    card = read_k_points!(cards; name="additional_k_points")
     isnothing(card) || push!(params, card)
 
     length(cards) == 0 || @error "Unrecognized cards in the input file: $cards"
@@ -439,7 +441,7 @@ K_POINTS automatic
 8 8 8    0 1 1
 ```
 """
-function write_k_points(io::IO, card::AbstractDict)
+function write_k_points(io::IO, card::AbstractDict; name::AbstractString="K_POINTS")
     option = get(card, :option, "")
     loption = lowercase(option)
 
@@ -450,7 +452,7 @@ function write_k_points(io::IO, card::AbstractDict)
     any(option in valid_options) || error("Unknown kpoints option: $option")
 
     isempty(option) || (option = " $option")
-    println(io, "K_POINTS$option")
+    println(io, "$name$option")
 
     if loption in valid_options_list
         # kpoints in reciprocal space
@@ -571,7 +573,7 @@ function write_pw_in(io::IO, inputs::AbstractDict)
         :atomic_positions => write_atomic_positions,
         :cell_parameters => write_cell_parameters,
         :k_points => write_k_points,
-        # :additional_k_points,
+        :additional_k_points => (i, c) -> write_k_points(i, c; name="ADDITIONAL_K_POINTS"),
         # :constraints,
         # :occupations,
         # :atomic_velocities,
