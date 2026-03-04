@@ -122,13 +122,13 @@ function read_projwfc_up(io::IO)
 
     # Construct a nicer list of orbital names
     orbitals = Vector{NamedTuple}(undef, natomwfc)
-    for i in 1:natomwfc
-        atom_index = nlmchi[i]["na"]
+    for (i, wfc) in enumerate(nlmchi)
+        atom_index = wfc.na
         atom_label = atm[ityp[atom_index]]
-        label = nlmchi[i]["els"]
-        n = nlmchi[i]["n"]
-        l = nlmchi[i]["l"]
-        m = nlmchi[i]["m"]
+        label = wfc.els
+        n = wfc.n
+        l = wfc.l
+        m = wfc.m
         orbitals[i] = (; atom_index, atom_label, label, n, l, m)
     end
 
