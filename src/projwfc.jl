@@ -24,7 +24,6 @@ function read_projwfc_up(io::IO)
     splitline() = split(strip(readline(io)))
 
     # The variable names are strange, as they mirror the names in the QE Fortran code.
-    # TODO maybe we should invent better names?
     params = OrderedDict{String, Any}()
     # header
     title = strip(readline(io), '\n')
@@ -132,7 +131,6 @@ function read_projwfc_up(io::IO)
         orbitals[i] = (; atom_index, atom_label, label, n, l, m)
     end
 
-    # TODO add test
     return params, orbitals, proj
 end
 
@@ -183,13 +181,16 @@ Read `projwfc.x` total PDOS file.
 
 # Arguments
 - `prefix::AbstractString`: The prefix of the PDOS file (e.g., `qe` for `qe.pdos_tot`).
+    If the filename already ends with `.pdos_tot`, it will be used directly; otherwise,
+    `.pdos_tot` will be appended to the prefix.
 
 # Returns
 - `columns::Matrix{Float64}`: A matrix containing the PDOS data.
 - `header::Vector{String}`: A vector containing the first line of the file.
 """
 function read_pdos_tot(prefix::AbstractString)
-    filename = "$prefix.pdos_tot"
+    suffix = ".pdos_tot"
+    filename = endswith(prefix, suffix) ? prefix : "$prefix$suffix"
     return read_projwfc_dos(filename)
 end
 

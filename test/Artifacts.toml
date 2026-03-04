@@ -3,21 +3,21 @@ git-tree-sha1 = "130e0e7a9b8854c77c15d4405716ae33780508b6"
 lazy = true
 
     [[Si.download]]
-    sha256 = "c37f054d3f61e649402acf99d8e3e8a709cdbef33525bd96d63bf9c414bcdf66"
-    url = "https://github.com/Koulb/QuantumEspressoDatasets/raw/main/artifacts/Si.tar.gz"
+    sha256 = "c3cf32e2cbb926946af5ba8dc867f4eaf06a3590a5477594f8cd493513fa2183"
+    url = "https://huggingface.co/datasets/atomology/QuantumEspressoDatasets/resolve/main/artifacts/Si.tar.gz"
 
 [CrI3]
 git-tree-sha1 = "3cad16e14b2fd74c999ba7b054b810a18c316783"
 lazy = true
 
     [[CrI3.download]]
-    sha256 = "308914f4fc3c68909945751c1e1064373fd06dc0fe719915af28d895c793a8c5"
-    url = "https://github.com/Koulb/QuantumEspressoDatasets/raw/main/artifacts/CrI3.tar.gz"
+    sha256 = "0db2f5e605d4e3895427282573800600bf6ed40b6b12f5bda6875d478d6f1cfb"
+    url = "https://huggingface.co/datasets/atomology/QuantumEspressoDatasets/resolve/main/artifacts/CrI3.tar.gz"
 
 [Si2]
-git-tree-sha1 = "e59f12a51cb53ae19348ed5f3f91a010f161a37c"
+git-tree-sha1 = "b0ee0dce247dc85c59ec0afd2ebc0aeb0dacee1b"
 lazy = true
 
     [[Si2.download]]
-    sha256 = "efa99c8181d47e184dd20b06dbeb21bea9e84e6c1a91fd7347a8749ec5c79340"
-    url = "https://github.com/Koulb/QuantumEspressoDatasets/raw/main/artifacts/Si2.tar.gz"
+    sha256 = "3478beea004a2d29d4134863cd0d9ee2de7310d343cd637ec30f077163f9779e"
+    url = "https://huggingface.co/datasets/atomology/QuantumEspressoDatasets/resolve/main/artifacts/Si2.tar.gz"
