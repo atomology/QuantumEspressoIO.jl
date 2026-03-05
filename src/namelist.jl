@@ -190,11 +190,20 @@ Get the option of a card.
 julia> parse_card_option("POSITIONS angstrom  ! comment")
 "angstrom"
 ```
+```jldoctest; setup = :(using QuantumEspressoIO: parse_card_option)
+julia> parse_card_option("POSITIONS {angstrom}  ! comment")
+"angstrom"
+```
 """
 @inline function parse_card_option(line::AbstractString)
     cardline = remove_comment(line)
     parts = split(cardline; limit=2)
-    option =  length(parts) < 2 ? nothing : parts[2]
+    if length(parts) < 2
+        return nothing
+    end
+    option = parts[2]
+    # remove any leading/ending curly braces
+    option = strip(rstrip(lstrip(option, '{'), '}'))
     return option
 end
 
