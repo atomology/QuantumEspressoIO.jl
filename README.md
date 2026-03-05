@@ -1,7 +1,7 @@
 # QuantumEspressoIO.jl
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://io.wannierjl.org/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://io.wannierjl.org/dev)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://atomology.github.io/QuantumEspressoIO.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://atomology.github.io/QuantumEspressoIO.jl/dev)
 [![CI](https://github.com/atomology/QuantumEspressoIO.jl/workflows/CI/badge.svg)](https://github.com/atomology/QuantumEspressoIO.jl/actions/workflows/CI)
 [![codecov](https://codecov.io/gh/atomology/QuantumEspressoIO.jl/graph/badge.svg?token=L3I63QL7IE)](https://codecov.io/gh/atomology/QuantumEspressoIO.jl)
 
