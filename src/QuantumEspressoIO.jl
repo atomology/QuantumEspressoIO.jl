@@ -1,12 +1,12 @@
 module QuantumEspressoIO
 
 using DocStringExtensions
+using Reexport
+@reexport using CrystalBase
 
 include("common/const.jl")
-include("common/type.jl")
 include("common/fortran.jl")
-include("common/lattice.jl")
-
+include("common/format.jl")
 
 include("namelist.jl")
 include("pw.jl")

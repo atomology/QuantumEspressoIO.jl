@@ -120,9 +120,9 @@ function read_pw_xml(filename::AbstractString)
         end
     end
 
-    # Convert to vector of SVectors [v1, v2, v3]
-    lattice = vec3.(eachcol(lattice))
-    recip_lattice = vec3.(eachcol(recip_lattice))
+    # Convert to `Mat3` matrices (each column is a lattice vector)
+    lattice = mat3(lattice)
+    recip_lattice = mat3(recip_lattice)
 
     results = (;
         lattice,
