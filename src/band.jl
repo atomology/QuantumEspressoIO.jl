@@ -104,12 +104,13 @@ it is identified as a high-symmetry kpoint.
 kpoints = [
     [0.0, 0.0, 0.0],
     [0.1, 0.0, 0.0],
-    [0.1, 0.1, 0.0],
-    [0.1, 0.1, 0.1],
+    [0.2, 0.0, 0.0],
+    [0.2, 0.1, 0.0],
+    [0.2, 0.1, 0.1],
 ]
 guess_high_symmetry_kpoints(kpoints)
 # output
-[1, 3, 4]
+[1, 3, 4, 5]
 """
 function guess_high_symmetry_kpoints(kpoints::AbstractVector; atol::AbstractFloat=2e-6)
     symm_point_indices = Int[]
