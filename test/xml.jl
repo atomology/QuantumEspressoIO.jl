@@ -24,6 +24,8 @@
     @test length(qe.kpoints) == 511
     @test qe.kpoints[1] ≈ [0.0, 0.0, 0.0]
     @test qe.kpoints[end] ≈ [0.5, 0.0, 0.5]
+    @test length(qe.kweights) == length(qe.kpoints)
+    @test all(==(3.913894324853e-3), qe.kweights)
 
     @test length(qe.eigenvalues) == 511
     eigenvalues1 = [
@@ -109,6 +111,8 @@ end
     @test length(qe.kpoints) == 274
     kpoint2 = [0.0, 0.0049999999999999975, 0.0]
     @test qe.kpoints[2] ≈ kpoint2
+    @test length(qe.kweights) == length(qe.kpoints)
+    @test all(==(3.649635036496e-3), qe.kweights)
 
     @test length(qe.eigenvalues_up) == 274
     eigenvalues_up2 = [-77.99192823029188, -77.99169805183234, -49.45736655071318]

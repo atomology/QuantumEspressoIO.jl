@@ -35,7 +35,7 @@ function read_pw_xml(filename::AbstractString)
     n_atoms = parse(Int, atomic_structure["nat"])
 
     # structure info, each column is a vector for position or lattice vector
-    atom_positions = Vec3[]
+    atom_positions = Vec3{Float64}[]
     atom_labels = Vector{String}(undef, n_atoms)
     lattice = zeros(3, 3)
 
@@ -84,7 +84,8 @@ function read_pw_xml(filename::AbstractString)
         n_bands = parse(Int, findfirst("nbnd", band_structure).content)
         eigenvalues = Vector{Float64}[]
     end
-    kpoints = Vec3[]
+    kpoints = Vec3{Float64}[]
+    kweights = Float64[]
 
     n_electrons = parse(Float64, findfirst("nelec", band_structure).content)
     fermi_energy = parse(Float64, findfirst("fermi_energy", band_structure).content)
@@ -95,6 +96,8 @@ function read_pw_xml(filename::AbstractString)
     ks_energies = findall("ks_energies", band_structure)
     for ks_energy in ks_energies
         k_point = findfirst("k_point", ks_energy)
+        wt = parse(Float64, k_point["weight"])
+        push!(kweights, wt)
         kpt = parse.(Float64, split(k_point.content))
         # to 1/angstrom
         kpt *= 2π / alat
@@ -127,6 +130,7 @@ function read_pw_xml(filename::AbstractString)
         atom_labels,
         recip_lattice,
         kpoints,
+        kweights,
         n_electrons,
         fermi_energy,
         alat,
