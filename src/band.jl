@@ -29,17 +29,14 @@ The data file has format
 
 # Examples
 ```jldoctest; setup = (using QuantumEspressoIO: read_band_dat)
-io = IOBuffer(\"""&plot nbnd=  2, nks=  11 /
+io = IOBuffer(\"""&plot nbnd=  11, nks=  1 /
 0.0  0.0  0.0
 -1.0  0.0  1.0  2.0  3.0  4.0  5.0  6.0  7.0  8.0
 9.0
 \""")
-kpoints, eigenvalues = read_band_dat("band.out")
-println(kpoints)
-println(eigenvalues)
+read_band_dat(io)
 # output
-[[0.0, 0.0, 0.0]]
-[[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]]
+(kpoints = StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0]], eigenvalues = [[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]])
 """
 function read_band_dat(io::IO)
     line = readline(io)

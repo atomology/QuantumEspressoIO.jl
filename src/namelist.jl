@@ -15,7 +15,7 @@ Read fortran namelists file.
 - `all_lines`: Return the remaining lines outside of namelists. Default to `false`.
 
 # Returns
-- `namelists::OrderedDict`: A dictionary of namelists, each key is a symbol and
+- `namelists::OrderedDict`: A dictionary of namelists, each key is a String and
     the value is a `OrderedDict` of key-value pairs.
 - `others::Vector`: Optional. A vector of strings, which are the remaining lines in the file.
     For example, QE `pw.x` input files may contain "cards" for additional parameters
@@ -35,11 +35,11 @@ additional line
 \""")
 namelists, others = read_namelists(io; all_lines=true)
 # output
-(OrderedCollections.OrderedDict{Symbol, Any}(:input => OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true)), ["additional line"])
+(OrderedCollections.OrderedDict{String, Any}("input" => OrderedCollections.OrderedDict{String, Any}("a" => 1, "b" => 2.0, "c" => "test", "d" => true)), ["additional line"])
 ```
 """
 function read_namelists(io::IO; all_lines::Bool=false)
-    namelists = OrderedDict{Symbol, Any}()
+    namelists = OrderedDict{String, Any}()
     others = String[]
 
     current_namelist = nothing
@@ -53,8 +53,8 @@ function read_namelists(io::IO; all_lines::Bool=false)
         if startswith(line, "&")
             # Parse namelist
             # fortran is case-insensitive, so we convert to lowercase
-            name = Symbol(lowercase(line[2:end]))
-            namelists[name] = OrderedDict{Symbol, Any}()
+            name = lowercase(line[2:end])
+            namelists[name] = OrderedDict{String, Any}()
             current_namelist = name
         elseif startswith(line, "/")
             # End of namelist
@@ -66,7 +66,7 @@ function read_namelists(io::IO; all_lines::Bool=false)
             # Parse key-value pairs
             key_value_pairs = split(line, "="; limit=2)
             # fortran is case-insensitive, so we convert to lowercase
-            key = Symbol(lowercase(strip(key_value_pairs[1])))
+            key = lowercase(strip(key_value_pairs[1]))
             # to be safe, we still keep the case of value unchanged
             value = strip(key_value_pairs[2])
             namelists[current_namelist][key] = parse_value(value)
@@ -122,16 +122,16 @@ additional line
 \""")
 namelist, others = read_namelist(io, "input"; all_lines=true)
 # output
-(OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true), ["additional line"])
+(OrderedCollections.OrderedDict{String, Any}("a" => 1, "b" => 2.0, "c" => "test", "d" => true), ["additional line"])
 ```
 """
-function read_namelist(io_or_filename::Union{IO,AbstractString}, name::StrOrSym; all_lines::Bool=false)
+function read_namelist(io_or_filename::Union{IO,AbstractString}, name::AbstractString; all_lines::Bool=false)
     if all_lines
         namelists, others = read_namelists(io_or_filename; all_lines)
     else
         namelists = read_namelists(io_or_filename; all_lines)
     end
-    params = get(namelists, Symbol(name), nothing)
+    params = get(namelists, name, nothing)
     isnothing(params) && error("Namelist $name not found")
     if all_lines
         return params, others
@@ -270,14 +270,14 @@ Write a Fortran namelist.
 
 # Arguments
 - `io::IO`: The IO stream to write to.
-- `name::StrOrSym`: The name of the namelist.
+- `name::AbstractString`: The name of the namelist.
 - `params::AbstractDict`: The key-value pairs to write, which is a dictionary-like object.
 
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_namelist)
 using OrderedCollections
 
-name = :input
+name = "input"
 params = OrderedDict(
     "a" => 1,
     "b" => 2.0,
@@ -298,7 +298,7 @@ write_namelist(stdout, name, params)
 /
 ```
 """
-function write_namelist(io::IO, name::StrOrSym, params::AbstractDict)
+function write_namelist(io::IO, name::AbstractString, params::AbstractDict)
     println(io, "&" * string(name))
     indent = 2
     for (k, v) in params
@@ -328,7 +328,7 @@ Write a Fortran namelist to a file.
 - `name`: The name of the namelist.
 - `params`: The key-value pairs to write, which is a dictionary-like object.
 """
-function write_namelist(filename::AbstractString, name::StrOrSym, params::AbstractDict)
+function write_namelist(filename::AbstractString, name::AbstractString, params::AbstractDict)
     return open(filename, "w") do io
         write_namelist(io, name, params)
     end
@@ -355,9 +355,9 @@ using OrderedCollections
 
 # Use OrderedDict to preserve the order of the keys
 inputs = OrderedDict(
-    :control => OrderedDict("calculation" => "scf", "prefix" => "qe"),
-    :system => OrderedDict("ecutwfc" => 30.0, "ecutrho" => 300.0),
-    :electrons => OrderedDict("mixing_beta" => 0.7),
+    "control" => OrderedDict("calculation" => "scf", "prefix" => "qe"),
+    "system" => OrderedDict("ecutwfc" => 30.0, "ecutrho" => 300.0),
+    "electrons" => OrderedDict("mixing_beta" => 0.7),
 )
 write_namelists(stdout, inputs)
 # output

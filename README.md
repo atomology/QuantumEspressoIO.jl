@@ -14,7 +14,7 @@ using QuantumEspressoIO
 
 julia> pw = read_pw_in("pw.in")
 
-julia> pw[:atomic_positions][:atoms]
+julia> pw["atomic_positions"]["atoms"]
 2-element Vector{String}:
  "Si"
  "Si"

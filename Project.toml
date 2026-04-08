@@ -4,6 +4,8 @@ authors = ["Aleksandr Poliukhin", "Junfeng Qiao", "Guoyuan Liu"]
 version = "0.1.0"
 
 [deps]
+CrystalBase = "0ae0509d-b425-412a-aec4-62d47edd1221"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
@@ -14,6 +16,8 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+CrystalBase = "0.2"
+Reexport = "1"
 DelimitedFiles = "1.9"
 DocStringExtensions = "0.9"
 EzXML = "1.1"
