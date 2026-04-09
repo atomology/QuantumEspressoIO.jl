@@ -15,7 +15,7 @@ Read fortran namelists file.
 - `all_lines`: Return the remaining lines outside of namelists. Default to `false`.
 
 # Returns
-- `namelists::OrderedDict`: A dictionary of namelists, each key is a symbol and
+- `namelists::OrderedDict`: A dictionary of namelists, each key is a String and
     the value is a `OrderedDict` of key-value pairs.
 - `others::Vector`: Optional. A vector of strings, which are the remaining lines in the file.
     For example, QE `pw.x` input files may contain "cards" for additional parameters
@@ -35,11 +35,11 @@ additional line
 \""")
 namelists, others = read_namelists(io; all_lines=true)
 # output
-(OrderedCollections.OrderedDict{Symbol, Any}(:input => OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true)), ["additional line"])
+(OrderedCollections.OrderedDict{String, Any}("input" => OrderedCollections.OrderedDict{String, Any}("a" => 1, "b" => 2.0, "c" => "test", "d" => true)), ["additional line"])
 ```
 """
 function read_namelists(io::IO; all_lines::Bool=false)
-    namelists = OrderedDict{Symbol,Any}()
+    namelists = OrderedDict{String, Any}()
     others = String[]
 
     current_namelist = nothing
@@ -53,8 +53,8 @@ function read_namelists(io::IO; all_lines::Bool=false)
         if startswith(line, "&")
             # Parse namelist
             # fortran is case-insensitive, so we convert to lowercase
-            name = Symbol(lowercase(line[2:end]))
-            namelists[name] = OrderedDict{Symbol,Any}()
+            name = lowercase(line[2:end])
+            namelists[name] = OrderedDict{String, Any}()
             current_namelist = name
         elseif startswith(line, "/")
             # End of namelist
@@ -66,7 +66,7 @@ function read_namelists(io::IO; all_lines::Bool=false)
             # Parse key-value pairs
             key_value_pairs = split(line, "="; limit=2)
             # fortran is case-insensitive, so we convert to lowercase
-            key = Symbol(lowercase(strip(key_value_pairs[1])))
+            key = lowercase(strip(key_value_pairs[1]))
             # to be safe, we still keep the case of value unchanged
             value = strip(key_value_pairs[2])
             namelists[current_namelist][key] = parse_value(value)
@@ -84,6 +84,7 @@ function read_namelists(io::IO; all_lines::Bool=false)
         end
         return namelists
     end
+
 end
 
 function read_namelists(filename::AbstractString; kwargs...)
@@ -121,18 +122,16 @@ additional line
 \""")
 namelist, others = read_namelist(io, "input"; all_lines=true)
 # output
-(OrderedCollections.OrderedDict{Symbol, Any}(:a => 1, :b => 2.0, :c => "test", :d => true), ["additional line"])
+(OrderedCollections.OrderedDict{String, Any}("a" => 1, "b" => 2.0, "c" => "test", "d" => true), ["additional line"])
 ```
 """
-function read_namelist(
-    io_or_filename::Union{IO,AbstractString}, name::StrOrSym; all_lines::Bool=false
-)
+function read_namelist(io_or_filename::Union{IO,AbstractString}, name::AbstractString; all_lines::Bool=false)
     if all_lines
         namelists, others = read_namelists(io_or_filename; all_lines)
     else
         namelists = read_namelists(io_or_filename; all_lines)
     end
-    params = get(namelists, Symbol(name), nothing)
+    params = get(namelists, name, nothing)
     isnothing(params) && error("Namelist $name not found")
     if all_lines
         return params, others
@@ -169,60 +168,30 @@ find_card(lines, name)
 """
 function find_card(lines::AbstractVector, name::AbstractString)
     lname = lowercase(name)
-    return findfirst(line -> startswith(lowercase(remove_comment(line)), lname), lines)
+    return findfirst(
+        line -> startswith(lowercase(remove_comment(line)), lname),
+        lines,
+    )
 end
 
-# TODO only considers pw keywords for now
-function is_namelist_keyword(line; keywords=PW_KEYWORDS)
-    line = strip(line)
-    startswith(line, "&") && return true
-
-    sl = split(line)[1]
-    lowercase(sl) in keywords && return true
-    return false
+function is_namelist_keyword(line::AbstractString; keywords=PW_KEYWORDS)
+    stripped = strip(line)
+    startswith(stripped, "&") && return true
+    isempty(stripped) && return false
+    first_token = lowercase(first(split(stripped)))
+    return first_token in keywords
 end
 
-"""
-    $(SIGNATURES)
-
-Find the last non-empty line in current card, which is any of the following:
-1. end of file
-2. the line before next card keyword
-3. empty line (this is assuming no empty lines in the middle of the card)
-
-# Arguments
-- `lines::AbstractVector`: The lines to read from.
-- `icard::Integer`: Beginning of the current card.
-
-# Returns
-- The index of the last line in the card.
-
-# Examples
-```jldoctest; setup = :(using QuantumEspressoIO: end_of_card)
-lines = [
-    "HUBBARD atomic",
-    "U Ni-3d 5.77",
-    "U Ni1-3d 5.77",
-    "ATOMIC_POSITIONS"
-]
-
-end_of_card(lines, 1)
-# output
-3
-"""
 function end_of_card(lines::AbstractVector, istart::Integer)
-    # advance to next line
-    istart += 1
-    while istart <= length(lines)
-        line = strip(lines[istart])
-        isempty(line) && return istart - 1
-        is_namelist_keyword(line) && return istart - 1
-        istart += 1
+    i = istart + 1
+    while i <= length(lines)
+        line = strip(lines[i])
+        isempty(line) && return i - 1
+        is_namelist_keyword(line) && return i - 1
+        i += 1
     end
-    # end of lines
-    return istart - 1
+    return i - 1
 end
-
 
 """
     $(SIGNATURES)
@@ -239,18 +208,21 @@ Get the option of a card.
 ```jldoctest; setup = :(using QuantumEspressoIO: parse_card_option)
 julia> parse_card_option("POSITIONS angstrom  ! comment")
 "angstrom"
-julia> parse_card_option("POSITIONS (automatic)  ! comment")
-"automatic"
-julia> parse_card_option("POSITIONS {automatic}  ! comment")
-"automatic"
+```
+```jldoctest; setup = :(using QuantumEspressoIO: parse_card_option)
+julia> parse_card_option("POSITIONS {angstrom}  ! comment")
+"angstrom"
 ```
 """
 @inline function parse_card_option(line::AbstractString)
     cardline = remove_comment(line)
-    cardline = replace(cardline, "("=>"", ")"=>"", "{"=>"", "}"=>"")
+    cardline = replace(cardline, "(" => "", ")" => "", "{" => "", "}" => "")
     parts = split(cardline; limit=2)
-    option = length(parts) < 2 ? nothing : parts[2]
-    return option
+    if length(parts) < 2
+        return nothing
+    end
+    option = parts[2]
+    return strip(option)
 end
 
 """
@@ -283,9 +255,7 @@ println(lines)
 ["  name2 = value2"]
 ```
 """
-function parse_card!(
-    lines::AbstractVector, name::AbstractString, n_lines::Union{Integer,Nothing}=nothing
-)
+function parse_card!(lines::AbstractVector, name::AbstractString, n_lines::Union{Integer,Nothing}=nothing)
     istart = find_card(lines, name)
     # nothing found
     isnothing(istart) && return nothing
@@ -318,14 +288,14 @@ Write a Fortran namelist.
 
 # Arguments
 - `io::IO`: The IO stream to write to.
-- `name::StrOrSym`: The name of the namelist.
+- `name::AbstractString`: The name of the namelist.
 - `params::AbstractDict`: The key-value pairs to write, which is a dictionary-like object.
 
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_namelist)
 using OrderedCollections
 
-name = :input
+name = "input"
 params = OrderedDict(
     "a" => 1,
     "b" => 2.0,
@@ -346,7 +316,7 @@ write_namelist(stdout, name, params)
 /
 ```
 """
-function write_namelist(io::IO, name::StrOrSym, params::AbstractDict)
+function write_namelist(io::IO, name::AbstractString, params::AbstractDict)
     println(io, "&" * string(name))
     indent = 2
     for (k, v) in params
@@ -363,7 +333,7 @@ function write_namelist(io::IO, name::StrOrSym, params::AbstractDict)
             @printf(io, "%s%s = %s\n", ' '^indent, k, fv)
         end
     end
-    return println(io, "/")
+    println(io, "/")
 end
 
 """
@@ -376,7 +346,7 @@ Write a Fortran namelist to a file.
 - `name`: The name of the namelist.
 - `params`: The key-value pairs to write, which is a dictionary-like object.
 """
-function write_namelist(filename::AbstractString, name::StrOrSym, params::AbstractDict)
+function write_namelist(filename::AbstractString, name::AbstractString, params::AbstractDict)
     return open(filename, "w") do io
         write_namelist(io, name, params)
     end
@@ -385,7 +355,7 @@ end
 function write_namelist(io::Union{IO,AbstractString}, namelist::Pair)
     name = first(namelist)
     params = second(namelist)
-    return write_namelist(io, name, params)
+    write_namelist(io, name, params)
 end
 
 """
@@ -403,9 +373,9 @@ using OrderedCollections
 
 # Use OrderedDict to preserve the order of the keys
 inputs = OrderedDict(
-    :control => OrderedDict("calculation" => "scf", "prefix" => "qe"),
-    :system => OrderedDict("ecutwfc" => 30.0, "ecutrho" => 300.0),
-    :electrons => OrderedDict("mixing_beta" => 0.7),
+    "control" => OrderedDict("calculation" => "scf", "prefix" => "qe"),
+    "system" => OrderedDict("ecutwfc" => 30.0, "ecutrho" => 300.0),
+    "electrons" => OrderedDict("mixing_beta" => 0.7),
 )
 write_namelists(stdout, inputs)
 # output

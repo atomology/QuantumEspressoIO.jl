@@ -1,4 +1,4 @@
-# Utilities
+# `pw.x`
 
 ```@meta
 CurrentModule = QuantumEspressoIO
@@ -8,7 +8,7 @@ CurrentModule = QuantumEspressoIO
 
 ```@index
 Pages = [
-    "utils.md",
+    "band.md",
 ]
 ```
 
@@ -17,8 +17,6 @@ Pages = [
 ```@autodocs
 Modules = [QuantumEspressoIO]
 Pages = [
-    "common/fortran.jl",
-    "common/format.jl",
-    "common/const.jl",
+    "band.jl",
 ]
 ```

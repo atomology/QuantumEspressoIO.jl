@@ -14,11 +14,14 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "API" => [
-            "Utilities" => "api/utils.md",
-            "Fortran Namelist" => "api/namelist.md",
             "`pw.x`" => "api/pw.md",
+            "`band.x`" => "api/band.md",
+            "`projwfc.x`" => "api/projwfc.md",
+            "`open_grid.x`" => "api/opengrid.md",
+            "Fortran Namelist" => "api/namelist.md",
             "XML" => "api/xml.md",
             "Binaries" => "api/bin.md",
+            "Utilities" => "api/utils.md",
         ]
     ],
     # doctest=:fix,  # update all the jldoctest

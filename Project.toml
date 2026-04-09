@@ -1,26 +1,32 @@
 name = "QuantumEspressoIO"
 uuid = "3a638b13-24f5-41eb-8ce1-879979581471"
 authors = ["Aleksandr Poliukhin", "Junfeng Qiao", "Guoyuan Liu"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
+CrystalBase = "0ae0509d-b425-412a-aec4-62d47edd1221"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-DocStringExtensions = "0.9.4"
-LinearAlgebra = "1.11.0"
-OrderedCollections = "1.8.0"
-Printf = "1.11.0"
-julia = "1.6.7"
+CrystalBase = "0.2"
+Reexport = "1"
+DelimitedFiles = "1.9"
+DocStringExtensions = "0.9"
+EzXML = "1.1"
+FortranFiles = "0.6"
+OrderedCollections = "1.8"
+PrecompileTools = "1"
+StaticArrays = "1"
+julia = "1.12"
 
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]
+[workspace]
+projects = ["test", "docs"]

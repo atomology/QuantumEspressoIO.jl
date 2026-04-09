@@ -5,7 +5,7 @@
     path_tst_data = joinpath(rootpath, "si2_bands.xml")
     qe = QuantumEspressoIO.read_pw_xml(path_tst_data)
 
-    lattice = [[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]]
+    lattice = mat3([[0.0, 2.715265, 2.715265], [2.715265, 0.0, 2.715265], [2.715265, 2.715265, 0.0]])
     @test qe.lattice ≈ lattice
 
     atom_positions = [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]
@@ -14,16 +14,20 @@
     atom_labels = ["Si", "Si"]
     @test qe.atom_labels == atom_labels
 
-    recip_lattice = [
-        [-1.1570114348285685, 1.1570114348285685, 1.1570114348285685],
-        [1.1570114348285685, -1.1570114348285685, 1.1570114348285685],
-        [1.1570114348285685, 1.1570114348285685, -1.1570114348285685]
-    ]
+    recip_lattice = mat3(
+        [
+            [-1.1570114348285685, 1.1570114348285685, 1.1570114348285685],
+            [1.1570114348285685, -1.1570114348285685, 1.1570114348285685],
+            [1.1570114348285685, 1.1570114348285685, -1.1570114348285685],
+        ]
+    )
     @test qe.recip_lattice ≈ recip_lattice
 
     @test length(qe.kpoints) == 511
     @test qe.kpoints[1] ≈ [0.0, 0.0, 0.0]
     @test qe.kpoints[end] ≈ [0.5, 0.0, 0.5]
+    @test length(qe.kweights) == length(qe.kpoints)
+    @test all(==(3.913894324853e-3), qe.kweights)
 
     @test length(qe.eigenvalues) == 511
     eigenvalues1 = [
@@ -70,18 +74,20 @@
     @test qe.alat ≈ 3.8399645884368714
 end
 
-@testset "read qe xml spin-polarized" begin
+@testitem "read qe xml spin-polarized" begin
     using LazyArtifacts
 
     rootpath = artifact"CrI3"
     path_tst_data = joinpath(rootpath, "cri3_bands.xml")
     qe = QuantumEspressoIO.read_pw_xml(path_tst_data)
 
-    lattice = [
-        [6.8171434485254725, -3.4085717242627362, 0.0]
-        [0.0, 5.903819407666132, 0.0]
-        [0.0, 0.0, 20.078373841305446]
-    ]
+    lattice = mat3(
+        [
+            [6.8171434485254725, 0.0, 0.0],
+            [-3.4085717242627362, 5.903819407666132, 0.0],
+            [0.0, 0.0, 20.078373841305446],
+        ]
+    )
     @test qe.lattice ≈ lattice
 
     atom_positions = [
@@ -99,16 +105,20 @@ end
     atom_labels = ["Cr", "Cr", "I", "I", "I", "I", "I", "I"]
     @test qe.atom_labels == atom_labels
 
-    recip_lattice = [
-        [0.921674210704576, 0.0, 0.0]
-        [0.532128853655385, 1.0642577073107704, 0.0]
-        [0.0, 0.0, 0.31293297738354436]
-    ]
+    recip_lattice = mat3(
+        [
+            [0.921674210704576, 0.532128853655385, 0.0],
+            [0.0, 1.0642577073107704, 0.0],
+            [0.0, 0.0, 0.31293297738354436],
+        ]
+    )
     @test qe.recip_lattice ≈ recip_lattice
 
     @test length(qe.kpoints) == 274
     kpoint2 = [0.0, 0.0049999999999999975, 0.0]
     @test qe.kpoints[2] ≈ kpoint2
+    @test length(qe.kweights) == length(qe.kpoints)
+    @test all(==(3.649635036496e-3), qe.kweights)
 
     @test length(qe.eigenvalues_up) == 274
     eigenvalues_up2 = [-77.99192823029188, -77.99169805183234, -49.45736655071318]

@@ -1,6 +1,6 @@
 using OrderedCollections
 
-export read_pw_in, write_pw_in
+export read_pw_in, read_hubbard_dat, write_pw_in
 
 """
     $(SIGNATURES)
@@ -29,7 +29,7 @@ card = read_atomic_species!(lines, n_species)
 println(card)
 println(lines)
 # output
-:atomic_species => OrderedCollections.OrderedDict{Symbol, Any}(:option => nothing, :species => ["Si", "O"], :masses => [28.0855, 15.999], :pseudos => ["Si.upf", "O.upf"])
+"atomic_species" => OrderedCollections.OrderedDict{String, Any}("option" => nothing, "species" => ["Si", "O"], "masses" => [28.0855, 15.999], "pseudos" => ["Si.upf", "O.upf"])
 ["following line"]
 ```
 """
@@ -49,13 +49,13 @@ function read_atomic_species!(lines::AbstractVector, n_species::Integer)
         push!(pseudos, ps)
     end
 
-    card = OrderedDict{Symbol,Any}()
-    card[:option] = option
-    card[:species] = species
-    card[:masses] = masses
-    card[:pseudos] = pseudos
+    card = OrderedDict{String, Any}()
+    card["option"] = option
+    card["species"] = species
+    card["masses"] = masses
+    card["pseudos"] = pseudos
 
-    return Symbol(name) => card
+    return name => card
 end
 
 """
@@ -85,7 +85,7 @@ card = read_atomic_positions!(lines, n_atoms)
 println(card)
 println(lines)
 # output
-:atomic_positions => OrderedCollections.OrderedDict{Symbol, Any}(:option => "crystal", :atoms => ["Si", "O"], :positions => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]])
+"atomic_positions" => OrderedCollections.OrderedDict{String, Any}("option" => "crystal", "atoms" => ["Si", "O"], "positions" => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]])
 ["following line"]
 ```
 """
@@ -103,12 +103,12 @@ function read_atomic_positions!(lines::AbstractVector, n_atoms::Integer)
         push!(positions, Vec3(parse_float.([x, y, z])))
     end
 
-    card = OrderedDict{Symbol,Any}()
-    card[:option] = option
-    card[:atoms] = atoms
-    card[:positions] = positions
+    card = OrderedDict{String, Any}()
+    card["option"] = option
+    card["atoms"] = atoms
+    card["positions"] = positions
 
-    return Symbol(name) => card
+    return name => card
 end
 
 """
@@ -133,7 +133,7 @@ card = read_cell_parameters!(lines)
 println(card)
 println(lines)
 # output
-:cell_parameters => OrderedCollections.OrderedDict{Symbol, Any}(:option => "angstrom", :cell => StaticArraysCore.SVector{3, Float64}[[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]])
+"cell_parameters" => OrderedCollections.OrderedDict{String, Any}("option" => "angstrom", "cell" => StaticArraysCore.SVector{3, Float64}[[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]])
 ["following line"]
 ```
 """
@@ -148,11 +148,11 @@ function read_cell_parameters!(lines::AbstractVector)
         push!(cell, Vec3(parse_float.(split(line))))
     end
 
-    card = OrderedDict{Symbol,Any}()
-    card[:option] = option
-    card[:cell] = cell
+    card = OrderedDict{String, Any}()
+    card["option"] = option
+    card["cell"] = cell
 
-    return Symbol(name) => card
+    return name => card
 end
 
 """
@@ -181,12 +181,11 @@ card = read_k_points!(lines)
 println(card)
 println(lines)
 # output
-:k_points => OrderedCollections.OrderedDict{Symbol, Any}(:option => "crystal", :kpoints => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], :kweights => [1.0, 1.0])
+"k_points" => OrderedCollections.OrderedDict{String, Any}("option" => "crystal", "kpoints" => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], "kweights" => [1.0, 1.0])
 ["following line"]
 ```
 """
-function read_k_points!(lines::AbstractVector)
-    name = "k_points"
+function read_k_points!(lines::AbstractVector; name::AbstractString="k_points")
     # kpoints has variable number of lines,
     # the number of lines is indicated by the card option
     icard = find_card(lines, name)
@@ -196,8 +195,8 @@ function read_k_points!(lines::AbstractVector)
     option = parse_card_option(lines[icard])
     loption = lowercase(option)
 
-    card = OrderedDict{Symbol,Any}()
-    card[:option] = option
+    card = OrderedDict{String, Any}()
+    card["option"] = option
 
     # Possible options from pw.x input description:
     # tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c
@@ -217,8 +216,8 @@ function read_k_points!(lines::AbstractVector)
             push!(kpoints, Vec3(parts[1:3]))
             push!(kweights, parts[4])
         end
-        card[:kpoints] = kpoints
-        card[:kweights] = kweights
+        card["kpoints"] = kpoints
+        card["kweights"] = kweights
     elseif loption == "automatic"
         # automatic kpoints
         n_lines = 1
@@ -226,8 +225,8 @@ function read_k_points!(lines::AbstractVector)
         parts = split(content[1])
         kgrid = parse.(Int, parts[1:3])
         kgrid_shift = parse_float.(parts[4:6])
-        card[:kgrid] = kgrid
-        card[:kgrid_shift] = kgrid_shift
+        card["kgrid"] = kgrid
+        card["kgrid_shift"] = kgrid_shift
     elseif loption == "gamma"
         # gamma point, remove the card line
         n_lines = 0
@@ -237,43 +236,30 @@ function read_k_points!(lines::AbstractVector)
         error("Unknown kpoints option: $option")
     end
 
-    return Symbol(name) => card
+    return name => card
 end
 
-"""
-    $(SIGNATURES)
-
-Count how many valid lines from istart to iend in lines inclusive.
-
-# Examples
-```jldoctest; setup = :(using QuantumEspressoIO: num_valid_lines)
-lines = [
-    "HUBBARD atomic",
-    "! a comment line",
-    "! another comment line",
-    "U Ni-3d 5.77",
-    "V Ni-3d O-2p 1 12 3.5",
-    "ALPHA Ni-3d 0.05",
-    "J0 Ni-3d 0.05",
-    "following",
-]
-nlines = valid_hubbard_lines(lines, 1, 8)
-println(nlines)
-# output
-4
-"""
 function valid_hubbard_lines(lines::AbstractVector, istart::Integer, iend::Integer)
-    i = istart
-    num_lines = iend - istart + 1
-    hubbard_types = ["U", "ALPHA", "J0", "J", "B", "E2", "E3", "V"]
+    n_valid = 0
+    valid_types = Set(["U", "ALPHA", "J0", "J", "B", "E2", "E3", "V"])
+
     for line in lines[istart:iend]
-        line = remove_comment(line)
-        # valid lines should start with hubbard symbol and end with value
-        if isempty(line) || !(endswith(line, r"\d+$") && any([startswith(line, t) for t in hubbard_types]))
-            num_lines -= 1
+        clean = remove_comment(line)
+        isempty(clean) && continue
+
+        parts = split(clean)
+        length(parts) < 3 && continue
+        uppercase(parts[1]) in valid_types || continue
+
+        try
+            parse_float(parts[end])
+            n_valid += 1
+        catch
+            continue
         end
     end
-    return num_lines
+
+    return n_valid
 end
 
 """
@@ -283,55 +269,30 @@ Parse the `hubbard` card of `pw.x` input.
 
 # Arguments
 - `lines::AbstractVector`: The lines of the input file.
-- `n_species::Integer`: The number of species in the input file.
 
 # Returns
 - A `Pair` of card name to card content. The card option is stored under
-    the `:option` key in the card content.
-
-# Examples
-```jldoctest; setup = :(using QuantumEspressoIO: read_hubbard!)
-lines = [
-    "HUBBARD atomic",
-    "! a comment line",
-    "! another comment line",
-    "U Ni-3d 5.77",
-    "U Ni1-3d 5.77",
-    "V Ni-3d O-2p 1 12 3.5",
-    "following lines",
-]
-card = read_hubbard!(lines)
-println(card)
-println(lines)
-# output
-:hubbard => OrderedCollections.OrderedDict{Symbol, Any}(:option => "atomic", :types => ["U", "U", "V"], :manifolds => ["Ni-3d", "Ni1-3d", "Ni-3d O-2p 1 12"], :values => [5.77, 5.77, 3.5])
-["following lines"]
-```
+    the `"option"` key in the card content.
 """
 function read_hubbard!(lines::AbstractVector)
     name = "hubbard"
     icard = find_card(lines, name)
-    # no hubbard card found
     isnothing(icard) && return nothing
 
-    # hubbard projector must be specified
-    # https://gitlab.com/QEF/q-e/-/blob/develop/Doc/Hubbard_input.tex?ref_type=heads
-    # FIXME in what degree should we consider the integrity of the input?
     option = parse_card_option(lines[icard])
-    if isempty(option)
-        @warn "Hubbard project is not specified!"
-    end
+    isnothing(option) && @warn "Hubbard projector is not specified"
 
-    # number of hubbard lines is not known a priori
     iend = end_of_card(lines, icard)
-    nline = valid_hubbard_lines(lines, icard, iend)
-    content = parse_card!(lines, name, nline)
-    card = OrderedDict{Symbol,Any}()
-    card[:option] = content[1]
-    card[:types] = map(x -> String(split(x)[1]), content[2])
-    card[:manifolds] = map(x -> join(split(x)[2:(end - 1)], " "), content[2])
-    card[:values] = map(x -> parse_float(split(x)[end]), content[2])
-    return Symbol(name) => card
+    n_lines = valid_hubbard_lines(lines, icard + 1, iend)
+    _, content = parse_card!(lines, name, n_lines)
+
+    card = OrderedDict{String,Any}()
+    card["option"] = option
+    card["types"] = map(x -> String(split(x)[1]), content)
+    card["manifolds"] = map(x -> join(split(x)[2:(end - 1)], " "), content)
+    card["values"] = map(x -> parse_float(split(x)[end]), content)
+
+    return name => card
 end
 
 """
@@ -374,7 +335,7 @@ io = IOBuffer(\"""
 inputs = read_pw_in(io)
 println(inputs)
 # output
-OrderedCollections.OrderedDict{Symbol, Any}(:control => OrderedCollections.OrderedDict{Symbol, Any}(:calculation => "scf"), :system => OrderedCollections.OrderedDict{Symbol, Any}(:ibrav => 0, :nat => 2, :ntyp => 2), :atomic_species => OrderedCollections.OrderedDict{Symbol, Any}(:option => nothing, :species => ["Si", "O"], :masses => [28.0855, 15.999], :pseudos => ["Si.upf", "O.upf"]), :atomic_positions => OrderedCollections.OrderedDict{Symbol, Any}(:option => "crystal", :atoms => ["Si", "O"], :positions => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]]), :cell_parameters => OrderedCollections.OrderedDict{Symbol, Any}(:option => "angstrom", :cell => StaticArraysCore.SVector{3, Float64}[[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]]), :k_points => OrderedCollections.OrderedDict{Symbol, Any}(:option => "crystal", :kpoints => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], :kweights => [1.0, 1.0]))
+OrderedCollections.OrderedDict{String, Any}("control" => OrderedCollections.OrderedDict{String, Any}("calculation" => "scf"), "system" => OrderedCollections.OrderedDict{String, Any}("ibrav" => 0, "nat" => 2, "ntyp" => 2), "atomic_species" => OrderedCollections.OrderedDict{String, Any}("option" => nothing, "species" => ["Si", "O"], "masses" => [28.0855, 15.999], "pseudos" => ["Si.upf", "O.upf"]), "atomic_positions" => OrderedCollections.OrderedDict{String, Any}("option" => "crystal", "atoms" => ["Si", "O"], "positions" => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]]), "cell_parameters" => OrderedCollections.OrderedDict{String, Any}("option" => "angstrom", "cell" => StaticArraysCore.SVector{3, Float64}[[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]]), "k_points" => OrderedCollections.OrderedDict{String, Any}("option" => "crystal", "kpoints" => StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], "kweights" => [1.0, 1.0]))
 ```
 """
 function read_pw_in(io::Union{IO,AbstractString})
@@ -382,11 +343,11 @@ function read_pw_in(io::Union{IO,AbstractString})
     namelists, cards = read_namelists(io; all_lines=true)
 
     # There are required parameters, also needed for parsing cards
-    isnothing(get(namelists, :system, nothing)) && error("Missing namelist: system")
-    isnothing(get(namelists[:system], :ntyp, nothing)) && error("Missing parameter: ntyp")
-    n_species = namelists[:system][:ntyp]
-    isnothing(get(namelists[:system], :nat, nothing)) && error("Missing parameter: nat")
-    n_atoms = namelists[:system][:nat]
+    isnothing(get(namelists, "system", nothing)) && error("Missing namelist: system")
+    isnothing(get(namelists["system"], "ntyp", nothing)) && error("Missing parameter: ntyp")
+    n_species = namelists["system"]["ntyp"]
+    isnothing(get(namelists["system"], "nat", nothing)) && error("Missing parameter: nat")
+    n_atoms = namelists["system"]["nat"]
 
     # merge the cards into namelists
     params = namelists
@@ -403,6 +364,9 @@ function read_pw_in(io::Union{IO,AbstractString})
     card = read_k_points!(cards)
     isnothing(card) || push!(params, card)
 
+    card = read_k_points!(cards; name="additional_k_points")
+    isnothing(card) || push!(params, card)
+
     card = read_hubbard!(cards)
     isnothing(card) || push!(params, card)
 
@@ -415,11 +379,12 @@ end
 """
     $(SIGNATURES)
 
-Read HUBBARD.dat from hp.x calculations.
+Read `HUBBARD.dat` from `hp.x` calculations.
 """
-function read_hubbard_dat(io::Union{IO, AbstractString})
+function read_hubbard_dat(io::Union{IO,AbstractString})
     _, cards = read_namelists(io; all_lines=true)
     card = read_hubbard!(cards)
+    isnothing(card) && error("Missing HUBBARD card")
     return card.second
 end
 
@@ -431,9 +396,9 @@ Write the `atomic_species` card of `pw.x`.
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_atomic_species)
 inputs = Dict(
-    :species => ["Si", "O"],
-    :masses => [28.0855, 15.999],
-    :pseudos => ["Si.upf", "O.upf"],
+    "species" => ["Si", "O"],
+    "masses" => [28.0855, 15.999],
+    "pseudos" => ["Si.upf", "O.upf"],
 )
 write_atomic_species(stdout, inputs)
 # output
@@ -444,7 +409,7 @@ O        15.999000  O.upf
 """
 function write_atomic_species(io::IO, card::AbstractDict)
     println(io, "ATOMIC_SPECIES")
-    for (sp, ma, ps) in zip(card[:species], card[:masses], card[:pseudos])
+    for (sp, ma, ps) in zip(card["species"], card["masses"], card["pseudos"])
         @printf(io, "%-4s  %12.6f  %s\n", sp, ma, ps)
     end
 end
@@ -457,9 +422,9 @@ Write the `atomic_positions` card of `pw.x`.
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_atomic_positions)
 inputs = Dict(
-    :option => "crystal",
-    :atoms => ["Si", "O"],
-    :positions => [
+    "option" => "crystal",
+    "atoms" => ["Si", "O"],
+    "positions" => [
         [0.0, 0.0, 0.0],
         [0.5, 0.5, 0.5],
     ],
@@ -472,10 +437,10 @@ O         0.5000000000      0.5000000000      0.5000000000
 ```
 """
 function write_atomic_positions(io::IO, card::AbstractDict)
-    option = get(card, :option, "")
+    option = get(card, "option", "")
     isempty(option) || (option = " $option")
     println(io, "ATOMIC_POSITIONS$option")
-    for (sp, pos) in zip(card[:atoms], card[:positions])
+    for (sp, pos) in zip(card["atoms"], card["positions"])
         @printf(io, "%-4s  %16.10f  %16.10f  %16.10f\n", sp, pos...)
     end
 end
@@ -488,8 +453,8 @@ Write the `cell_parameters` card of `pw.x`.
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_cell_parameters)
 inputs = Dict(
-    :option => "angstrom",
-    :cell => [
+    "option" => "angstrom",
+    "cell" => [
         [1.0, 0.0, 0.0],
         [0.0, 2.0, 0.0],
         [0.0, 0.0, 3.0],
@@ -504,10 +469,10 @@ CELL_PARAMETERS angstrom
 ```
 """
 function write_cell_parameters(io::IO, card::AbstractDict)
-    option = get(card, :option, "")
+    option = get(card, "option", "")
     isempty(option) || (option = " $option")
     println(io, "CELL_PARAMETERS$option")
-    for v in card[:cell]
+    for v in card["cell"]
         @printf(io, "%16.10f  %16.10f  %16.10f\n", v...)
     end
 end
@@ -520,12 +485,12 @@ Write the `k_points` card of `pw.x`.
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_k_points)
 inputs = Dict(
-    :option => "crystal",
-    :kpoints => [
+    "option" => "crystal",
+    "kpoints" => [
         [0.0, 0.0, 0.0],
         [0.5, 0.5, 0.5],
     ],
-    :kweights => [1.0, 1.0],
+    "kweights" => [1.0, 1.0],
 )
 write_k_points(stdout, inputs)
 # output
@@ -534,32 +499,42 @@ K_POINTS crystal
     0.0000000000      0.0000000000      0.0000000000      1.0000000000
     0.5000000000      0.5000000000      0.5000000000      1.0000000000
 ```
+
+```jldoctest; setup = :(using QuantumEspressoIO: write_k_points)
+inputs = Dict(
+    "option" => "automatic",
+    "kgrid" => [8, 8, 8],
+    "kgrid_shift" => [0, 1, 1],
+)
+write_k_points(stdout, inputs)
+# output
+K_POINTS automatic
+8 8 8    0 1 1
+```
 """
-function write_k_points(io::IO, card::AbstractDict)
-    option = get(card, :option, "")
+function write_k_points(io::IO, card::AbstractDict; name::AbstractString="K_POINTS")
+    option = get(card, "option", "")
     loption = lowercase(option)
 
-    valid_options_list = [
-        "tpiba", "crystal", "tpiba_b", "crystal_b", "tpiba_c", "crystal_c"
-    ]
+    valid_options_list = ["tpiba", "crystal", "tpiba_b", "crystal_b", "tpiba_c", "crystal_c"]
     valid_options_auto = ["automatic"]
     valid_options_gamma = ["gamma"]
     valid_options = vcat(valid_options_list, valid_options_auto, valid_options_gamma)
     any(option in valid_options) || error("Unknown kpoints option: $option")
 
     isempty(option) || (option = " $option")
-    println(io, "K_POINTS$option")
+    println(io, "$name$option")
 
     if loption in valid_options_list
         # kpoints in reciprocal space
-        nkpts = length(card[:kpoints])
+        nkpts = length(card["kpoints"])
         println(io, string(nkpts))
-        for (k, w) in zip(card[:kpoints], card[:kweights])
+        for (k, w) in zip(card["kpoints"], card["kweights"])
             @printf(io, "%16.10f  %16.10f  %16.10f  %16.10f\n", k..., w)
         end
     elseif loption in valid_options_auto
         # automatic kpoints
-        @printf(io, "%d %d %d    %f %f %f\n", card[:kgrid]..., card[:kgrid_shift]...)
+        @printf(io, "%d %d %d    %d %d %d\n", card["kgrid"]..., card["kgrid_shift"]...)
     elseif loption in valid_options_gamma
         # gamma point, nothing to do
     else
@@ -572,40 +547,21 @@ end
     $(SIGNATURES)
 
 Write the `hubbard` card of `pw.x`.
-
-# Examples
-```jldoctest; setup = :(using QuantumEspressoIO: write_hubbard)
-inputs = Dict(
-    :option => "atomic",
-    :types => ["U", "U"],
-    :values => [5.0, 5.0],
-    :manifolds => ["Ni-3d", "Ni1-3d"],
-)
-write_hubbard(stdout, inputs)
-# output
-HUBBARD atomic
-U Ni-3d 5.0
-U Ni1-3d 5.0
-```
 """
 function write_hubbard(io::IO, card::AbstractDict)
-    option = get(card, :option, "")
-    # FIXME general question: how do we check for valid input?
-    isempty(option) && @error "Hubbard projector is not specified."
+    option = get(card, "option", "")
+    isempty(option) && error("Hubbard projector is not specified")
+
     projector_types = Set(["atomic", "ortho-atomic", "norm-atomic", "wf", "pseudo"])
-    if option in projector_types
-        println(io, "HUBBARD $option")
-    else
-        @error "Hubbard projector $option is not valid."
+    option in projector_types || error("Hubbard projector $option is not valid")
+    println(io, "HUBBARD $option")
+
+    valid_types = Set(["U", "ALPHA", "J0", "J", "B", "E2", "E3", "V"])
+    for t in card["types"]
+        uppercase(t) in valid_types || error("Hubbard type $t is not valid")
     end
 
-    valid_types = Set(["U", "J0", "J", "B", "E2", "E3", "V"])
-    for t in card[:types]
-        if !in(uppercase(t), valid_types)
-            @error "Hubbard type $t is not valid"
-        end
-    end
-    for (t, m, v) in zip(card[:types], card[:manifolds], card[:values])
+    for (t, m, v) in zip(card["types"], card["manifolds"], card["values"])
         println(io, "$(uppercase(t)) $m $v")
     end
 end
@@ -628,48 +584,48 @@ Write the `pw.x` input file.
 using OrderedCollections
 
 inputs = OrderedDict(
-    :control => OrderedDict(
-        :calculation => "scf",
-        :prefix => "SiO",
-        :outdir => "./out",
-        :pseudo_dir => "./pseudo",
+    "control" => OrderedDict(
+        "calculation" => "scf",
+        "prefix" => "SiO",
+        "outdir" => "./out",
+        "pseudo_dir" => "./pseudo",
     ),
-    :system => OrderedDict(
-        :ibrav => 0,
-        :nat => 2,
-        :ntyp => 2,
+    "system" => OrderedDict(
+        "ibrav" => 0,
+        "nat" => 2,
+        "ntyp" => 2,
     ),
-    :electrons => OrderedDict(
-        :conv_thr => 1e-6,
+    "electrons" => OrderedDict(
+        "conv_thr" => 1e-6,
     ),
-    :atomic_species => Dict(
-        :species => ["Si", "O"],
-        :masses => [28.0855, 15.999],
-        :pseudos => ["Si.upf", "O.upf"],
+    "atomic_species" => Dict(
+        "species" => ["Si", "O"],
+        "masses" => [28.0855, 15.999],
+        "pseudos" => ["Si.upf", "O.upf"],
     ),
-    :atomic_positions => Dict(
-        :option => "crystal",
-        :atoms => ["Si", "O"],
-        :positions => [
+    "atomic_positions" => Dict(
+        "option" => "crystal",
+        "atoms" => ["Si", "O"],
+        "positions" => [
             [0.0, 0.0, 0.0],
             [0.5, 0.5, 0.5],
         ],
     ),
-    :cell_parameters => Dict(
-        :option => "angstrom",
-        :cell => [
+    "cell_parameters" => Dict(
+        "option" => "angstrom",
+        "cell" => [
             [1.0, 0.0, 0.0],
             [0.0, 2.0, 0.0],
             [0.0, 0.0, 3.0],
         ],
     ),
-    :k_points => Dict(
-        :option => "crystal",
-        :kpoints => [
+    "k_points" => Dict(
+        "option" => "crystal",
+        "kpoints" => [
             [0.0, 0.0, 0.0],
             [0.5, 0.5, 0.5],
         ],
-        :kweights => [1.0, 1.0],
+        "kweights" => [1.0, 1.0],
     ),
 )
 write_pw_in(stdout, inputs)
@@ -705,22 +661,22 @@ K_POINTS crystal
 ```
 """
 function write_pw_in(io::IO, inputs::AbstractDict)
-    valid_namelists = [:control, :system, :electrons, :ions, :cell, :fcp, :rism]
-    valid_cards = OrderedDict{Symbol,Function}(
-        :atomic_species => write_atomic_species,
-        :atomic_positions => write_atomic_positions,
-        :cell_parameters => write_cell_parameters,
-        :k_points => write_k_points,
-        :hubbard => write_hubbard,
-        # :additional_k_points,
-        # :constraints,
-        # :occupations,
-        # :atomic_velocities,
-        # :atomic_forces,
-        # :solvents,
+    valid_namelists = ["control", "system", "electrons", "ions", "cell", "fcp", "rism",]
+    valid_cards = OrderedDict{String,Function}(
+        "atomic_species" => write_atomic_species,
+        "atomic_positions" => write_atomic_positions,
+        "cell_parameters" => write_cell_parameters,
+        "k_points" => write_k_points,
+        "additional_k_points" => (i, c) -> write_k_points(i, c; name="ADDITIONAL_K_POINTS"),
+        "hubbard" => write_hubbard,
+        # "constraints",
+        # "occupations",
+        # "atomic_velocities",
+        # "atomic_forces",
+        # "solvents",
     )
 
-    done_keys = Set{Symbol}()
+    done_keys = Set{String}()
 
     for name in valid_namelists
         if haskey(inputs, name)
@@ -753,5 +709,33 @@ Write the `pw.x` input file to a file.
 function write_pw_in(filename::AbstractString, inputs::AbstractDict)
     return open(filename, "w") do io
         write_pw_in(io, inputs)
+    end
+end
+
+"""
+Read relaxed structures from stdout file of `pw.x`.
+"""
+function read_structures(filename::AbstractString)
+    return open(filename) do io
+        natoms = -1
+        cell_parameters = []
+        atomic_positions = []
+
+        while !eof(io)
+            line = readline(io)
+            if occursin("number of atoms/cell      =", line)
+                natoms = parse(Int, strip(split(line, "=")[end]))
+            elseif startswith(line, "CELL_PARAMETERS")
+                lines = [line, [readline(io) for _ in 1:3]...]
+                push!(cell_parameters, last(read_cell_parameters!(lines)))
+            elseif startswith(line, "ATOMIC_POSITIONS")
+                (natoms >= 0) || error("Expected `number of atoms/cell` line before ATOMIC_POSITIONS card")
+                lines = [line, [readline(io) for _ in 1:natoms]...]
+                card = last(read_atomic_positions!(lines, natoms))
+                push!(atomic_positions, card)
+            end
+        end
+
+        return cell_parameters, atomic_positions
     end
 end
