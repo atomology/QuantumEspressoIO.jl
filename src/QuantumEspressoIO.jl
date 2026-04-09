@@ -16,4 +16,6 @@ include("band.jl")
 include("projwfc.jl")
 include("opengrid.jl")
 
+include("precompile.jl")
+
 end
