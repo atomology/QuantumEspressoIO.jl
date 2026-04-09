@@ -174,7 +174,7 @@ function find_card(lines::AbstractVector, name::AbstractString)
     )
 end
 
-function is_namelist_keyword(line::AbstractString; keywords=PW_KEYWORDS)
+function is_namelist_keyword(line::AbstractString; keywords=PW_CARD_NAMES)
     stripped = strip(line)
     startswith(stripped, "&") && return true
     isempty(stripped) && return false

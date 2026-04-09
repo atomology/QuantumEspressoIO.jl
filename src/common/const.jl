@@ -8,9 +8,9 @@ This is the default (Physical constants, SI (NIST 2018)) value in QE
 const Bohr_QE::Float64 = 0.529177210903
 
 """
-pw.x input keywords
+pw.x input card names.
 """
-const PW_KEYWORDS = Set([
+const PW_CARD_NAMES = Set([
     "atomic_species",
     "atomic_positions",
     "k_points",
