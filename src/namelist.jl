@@ -84,7 +84,6 @@ function read_namelists(io::IO; all_lines::Bool=false)
         end
         return namelists
     end
-
 end
 
 function read_namelists(filename::AbstractString; kwargs...)
@@ -168,11 +167,60 @@ find_card(lines, name)
 """
 function find_card(lines::AbstractVector, name::AbstractString)
     lname = lowercase(name)
-    return findfirst(
-        line -> startswith(lowercase(remove_comment(line)), lname),
-        lines,
-    )
+    return findfirst(line -> startswith(lowercase(remove_comment(line)), lname), lines)
 end
+
+# TODO only considers pw keywords for now
+function is_namelist_keyword(line; keywords=PW_KEYWORDS)
+    line = strip(line)
+    startswith(line, "&") && return true
+
+    sl = split(line)[1]
+    lowercase(sl) in keywords && return true
+    return false
+end
+
+"""
+    $(SIGNATURES)
+
+Find the last non-empty line in current card, which is any of the following:
+1. end of file
+2. the line before next card keyword
+3. empty line (this is assuming no empty lines in the middle of the card)
+
+# Arguments
+- `lines::AbstractVector`: The lines to read from.
+- `icard::Integer`: Beginning of the current card.
+
+# Returns
+- The index of the last line in the card.
+
+# Examples
+```jldoctest; setup = :(using QuantumEspressoIO: end_of_card)
+lines = [
+    "HUBBARD atomic",
+    "U Ni-3d 5.77",
+    "U Ni1-3d 5.77",
+    "ATOMIC_POSITIONS"
+]
+
+end_of_card(lines, 1)
+# output
+3
+"""
+function end_of_card(lines::AbstractVector, istart::Integer)
+    # advance to next line
+    istart += 1
+    while istart <= length(lines)
+        line = strip(lines[istart])
+        isempty(line) && return istart - 1
+        is_namelist_keyword(line) && return istart - 1
+        istart += 1
+    end
+    # end of lines
+    return istart - 1
+end
+
 
 """
     $(SIGNATURES)
@@ -189,6 +237,10 @@ Get the option of a card.
 ```jldoctest; setup = :(using QuantumEspressoIO: parse_card_option)
 julia> parse_card_option("POSITIONS angstrom  ! comment")
 "angstrom"
+julia> parse_card_option("POSITIONS (automatic)  ! comment")
+"automatic"
+julia> parse_card_option("POSITIONS {automatic}  ! comment")
+"automatic"
 ```
 ```jldoctest; setup = :(using QuantumEspressoIO: parse_card_option)
 julia> parse_card_option("POSITIONS {angstrom}  ! comment")
@@ -197,6 +249,7 @@ julia> parse_card_option("POSITIONS {angstrom}  ! comment")
 """
 @inline function parse_card_option(line::AbstractString)
     cardline = remove_comment(line)
+    cardline = replace(cardline, "("=>"", ")"=>"", "{"=>"", "}"=>"")
     parts = split(cardline; limit=2)
     if length(parts) < 2
         return nothing
@@ -237,7 +290,9 @@ println(lines)
 ["  name2 = value2"]
 ```
 """
-function parse_card!(lines::AbstractVector, name::AbstractString, n_lines::Union{Integer,Nothing}=nothing)
+function parse_card!(
+    lines::AbstractVector, name::AbstractString, n_lines::Union{Integer,Nothing}=nothing
+)
     istart = find_card(lines, name)
     # nothing found
     isnothing(istart) && return nothing
@@ -315,7 +370,7 @@ function write_namelist(io::IO, name::AbstractString, params::AbstractDict)
             @printf(io, "%s%s = %s\n", ' '^indent, k, fv)
         end
     end
-    println(io, "/")
+    return println(io, "/")
 end
 
 """
@@ -337,7 +392,7 @@ end
 function write_namelist(io::Union{IO,AbstractString}, namelist::Pair)
     name = first(namelist)
     params = second(namelist)
-    write_namelist(io, name, params)
+    return write_namelist(io, name, params)
 end
 
 """
