@@ -25,7 +25,7 @@ The data file has format
 
 # Returns
 - `kpoints`: Vector of kpoints in Cartesian coordinates, but scaled by QE `alat`
-- `eigenvalues`: Vector of eigenvalues for each kpoint
+- `eigenvalues`: `n_bands × n_kpts` matrix of eigenvalues
 
 # Examples
 ```jldoctest; setup = (using QuantumEspressoIO: read_band_dat)
@@ -36,7 +36,7 @@ io = IOBuffer(\"""&plot nbnd=  11, nks=  1 /
 \""")
 read_band_dat(io)
 # output
-(kpoints = StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0]], eigenvalues = [[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]])
+(kpoints = StaticArraysCore.SVector{3, Float64}[[0.0, 0.0, 0.0]], eigenvalues = [-1.0; 0.0; 1.0; 2.0; 3.0; 4.0; 5.0; 6.0; 7.0; 8.0; 9.0;;])
 """
 function read_band_dat(io::IO)
     line = readline(io)
@@ -55,22 +55,20 @@ function read_band_dat(io::IO)
     end
 
     kpoints = Vec3{Float64}[]
-    eigenvalues = Vector{Float64}[]
+    eigenvalues = zeros(Float64, n_bands, n_kpts)
 
-    for _ in 1:n_kpts
+    for ik in 1:n_kpts
         # QE kpt are in cartesian coordinates, but scaled by `alat`
         kpt = parse.(Float64, split(readline(io)))
         push!(kpoints, kpt)
         ib = 1
-        eig = zeros(Float64, n_bands)
         while ib <= n_bands
             e = parse.(Float64, split(readline(io)))
             n_e = length(e)
-            eig[ib:(ib + n_e - 1)] = e
+            eigenvalues[ib:(ib + n_e - 1), ik] = e
             ib += n_e
         end
         (ib == (n_bands + 1)) || error("Number of eigenvalues != number of bands")
-        push!(eigenvalues, eig)
     end
 
     return (; kpoints, eigenvalues)

@@ -13,9 +13,9 @@ Read atomic structure and band structure from QE's XML output.
 - `kpoints`: length-`n_kpts` vector, each element is a fractional kpoint
 - `fermi_energy`: eV
 - `alat`: the `alat` of QE in Å
-- `eigenvalues`: length-`n_kpts` vector, each element is a length-`n_bands` vector of
-    eigenvalue in eV. For spin-polarized but without SOC calculations,
-    return two arries of `eigenvalues_up` and `eigenvalues_dn` for the two spin channels.
+- `eigenvalues`: `n_bands × n_kpts` matrix of eigenvalues in eV. For
+    spin-polarized but without SOC calculations, return two matrices
+    `eigenvalues_up` and `eigenvalues_dn` for the two spin channels.
 """
 function read_pw_xml(filename::AbstractString)
     # from qe/Modules/constants.f90
@@ -78,11 +78,11 @@ function read_pw_xml(filename::AbstractString)
         # they should be the same in QE
         @assert nbnd_up == nbnd_dn
         n_bands = nbnd_up
-        eigenvalues_up = Vector{Float64}[]
-        eigenvalues_dn = Vector{Float64}[]
+        eigenvalues_up = zeros(Float64, n_bands, n_kpts)
+        eigenvalues_dn = zeros(Float64, n_bands, n_kpts)
     else
         n_bands = parse(Int, findfirst("nbnd", band_structure).content)
-        eigenvalues = Vector{Float64}[]
+        eigenvalues = zeros(Float64, n_bands, n_kpts)
     end
     kpoints = Vec3{Float64}[]
     kweights = Float64[]
@@ -94,7 +94,8 @@ function read_pw_xml(filename::AbstractString)
 
     inv_recip = inv(recip_lattice)
     ks_energies = findall("ks_energies", band_structure)
-    for ks_energy in ks_energies
+    length(ks_energies) == n_kpts || error("expected $n_kpts ks_energies, got $(length(ks_energies))")
+    for (ik, ks_energy) in enumerate(ks_energies)
         k_point = findfirst("k_point", ks_energy)
         wt = parse(Float64, k_point["weight"])
         push!(kweights, wt)
@@ -110,13 +111,13 @@ function read_pw_xml(filename::AbstractString)
             e = parse.(Float64, split(qe_eigenvalues.content))
             # Hartree to eV
             e .*= AUTOEV
-            push!(eigenvalues_up, e[1:n_bands])
-            push!(eigenvalues_dn, e[(n_bands + 1):end])
+            eigenvalues_up[:, ik] = e[1:n_bands]
+            eigenvalues_dn[:, ik] = e[(n_bands + 1):end]
         else
             e = parse.(Float64, split(qe_eigenvalues.content))
             # Hartree to eV
             e .*= AUTOEV
-            push!(eigenvalues, e)
+            eigenvalues[:, ik] = e
         end
     end
 
