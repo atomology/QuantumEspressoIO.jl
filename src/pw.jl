@@ -245,7 +245,7 @@ end
 Count how many valid lines from istart to iend in lines inclusive.
 
 # Examples
-```jldoctest; setup = :(using QuantumEspressoIO: num_valid_lines)
+```jldoctest; setup = :(using QuantumEspressoIO: valid_hubbard_lines)
 lines = [
     "HUBBARD atomic",
     "! a comment line",
@@ -260,17 +260,16 @@ nlines = valid_hubbard_lines(lines, 1, 8)
 println(nlines)
 # output
 4
+```
 """
 function valid_hubbard_lines(lines::AbstractVector, istart::Integer, iend::Integer)
-    i = istart
-    num_lines = iend - istart + 1
-    hubbard_types = ["U", "ALPHA", "J0", "J", "B", "E2", "E3", "V"]
+    num_lines = 0
     for line in lines[istart:iend]
         line = remove_comment(line)
-        # valid lines should start with hubbard symbol and end with value
-        if isempty(line) || !(endswith(line, r"\d+$") && any([startswith(line, t) for t in hubbard_types]))
-            num_lines -= 1
-        end
+        isempty(line) && continue
+        # valid lines should start with hubbard type and end with value
+        type = uppercase(first(split(line)))
+        (type in HUBBARD_TYPES && endswith(line, r"\d+$")) && (num_lines += 1)
     end
     return num_lines
 end
@@ -282,11 +281,10 @@ Parse the `hubbard` card of `pw.x` input.
 
 # Arguments
 - `lines::AbstractVector`: The lines of the input file.
-- `n_species::Integer`: The number of species in the input file.
 
 # Returns
 - A `Pair` of card name to card content. The card option is stored under
-    the `:option` key in the card content.
+    the `"option"` key in the card content.
 
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: read_hubbard!)
@@ -303,7 +301,7 @@ card = read_hubbard!(lines)
 println(card)
 println(lines)
 # output
-:hubbard => OrderedCollections.OrderedDict{Symbol, Any}(:option => "atomic", :types => ["U", "U", "V"], :manifolds => ["Ni-3d", "Ni1-3d", "Ni-3d O-2p 1 12"], :values => [5.77, 5.77, 3.5])
+"hubbard" => OrderedCollections.OrderedDict{String, Any}("option" => "atomic", "types" => ["U", "U", "V"], "manifolds" => ["Ni-3d", "Ni1-3d", "Ni-3d O-2p 1 12"], "values" => [5.77, 5.77, 3.5])
 ["following lines"]
 ```
 """
@@ -317,20 +315,20 @@ function read_hubbard!(lines::AbstractVector)
     # https://gitlab.com/QEF/q-e/-/blob/develop/Doc/Hubbard_input.tex?ref_type=heads
     # FIXME in what degree should we consider the integrity of the input?
     option = parse_card_option(lines[icard])
-    if isempty(option)
-        @warn "Hubbard project is not specified!"
+    if isnothing(option) || isempty(option)
+        @warn "Hubbard projector is not specified!"
     end
 
     # number of hubbard lines is not known a priori
     iend = end_of_card(lines, icard)
     nline = valid_hubbard_lines(lines, icard, iend)
     content = parse_card!(lines, name, nline)
-    card = OrderedDict{Symbol,Any}()
-    card[:option] = content[1]
-    card[:types] = map(x -> String(split(x)[1]), content[2])
-    card[:manifolds] = map(x -> join(split(x)[2:(end - 1)], " "), content[2])
-    card[:values] = map(x -> parse_float(split(x)[end]), content[2])
-    return Symbol(name) => card
+    card = OrderedDict{String, Any}()
+    card["option"] = content[1]
+    card["types"] = map(x -> String(split(x)[1]), content[2])
+    card["manifolds"] = map(x -> join(split(x)[2:(end - 1)], " "), content[2])
+    card["values"] = map(x -> parse_float(split(x)[end]), content[2])
+    return name => card
 end
 
 """
@@ -403,6 +401,9 @@ function read_pw_in(io::Union{IO,AbstractString})
     isnothing(card) || push!(params, card)
 
     card = read_k_points!(cards; name="additional_k_points")
+    isnothing(card) || push!(params, card)
+
+    card = read_hubbard!(cards)
     isnothing(card) || push!(params, card)
 
     length(cards) == 0 || @error "Unrecognized cards in the input file: $cards"
@@ -587,10 +588,10 @@ Write the `hubbard` card of `pw.x`.
 # Examples
 ```jldoctest; setup = :(using QuantumEspressoIO: write_hubbard)
 inputs = Dict(
-    :option => "atomic",
-    :types => ["U", "U"],
-    :values => [5.0, 5.0],
-    :manifolds => ["Ni-3d", "Ni1-3d"],
+    "option" => "atomic",
+    "types" => ["U", "U"],
+    "values" => [5.0, 5.0],
+    "manifolds" => ["Ni-3d", "Ni1-3d"],
 )
 write_hubbard(stdout, inputs)
 # output
@@ -600,7 +601,7 @@ U Ni1-3d 5.0
 ```
 """
 function write_hubbard(io::IO, card::AbstractDict)
-    option = get(card, :option, "")
+    option = get(card, "option", "")
     # FIXME general question: how do we check for valid input?
     isempty(option) && @error "Hubbard projector is not specified."
     projector_types = Set(["atomic", "ortho-atomic", "norm-atomic", "wf", "pseudo"])
@@ -610,13 +611,12 @@ function write_hubbard(io::IO, card::AbstractDict)
         @error "Hubbard projector $option is not valid."
     end
 
-    valid_types = Set(["U", "J0", "J", "B", "E2", "E3", "V"])
-    for t in card[:types]
-        if !in(uppercase(t), valid_types)
+    for t in card["types"]
+        if !in(uppercase(t), HUBBARD_TYPES)
             @error "Hubbard type $t is not valid"
         end
     end
-    for (t, m, v) in zip(card[:types], card[:manifolds], card[:values])
+    for (t, m, v) in zip(card["types"], card["manifolds"], card["values"])
         println(io, "$(uppercase(t)) $m $v")
     end
 end
@@ -728,7 +728,7 @@ function write_pw_in(io::IO, inputs::AbstractDict)
         # "atomic_velocities",
         # "atomic_forces",
         # "solvents",
-        # "hubbard",
+        "hubbard" => write_hubbard,
     )
 
     done_keys = Set{String}()

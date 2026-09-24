@@ -207,6 +207,7 @@ lines = [
 end_of_card(lines, 1)
 # output
 3
+```
 """
 function end_of_card(lines::AbstractVector, istart::Integer)
     # advance to next line
