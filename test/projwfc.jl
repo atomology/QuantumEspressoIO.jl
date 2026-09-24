@@ -21,8 +21,8 @@
         (atom_index=2, atom_label="Si", label="3P", n=2, l=1, m=3)
     ]
 
-    @test size(proj) == (nkpts, nbands, nprojs)
-    @test proj[2, 1:5, 1] ≈ [0.4981375412, 0.0005278635, 0.0, 0.0, 0.0001201347]
+    @test size(proj) == (nbands, nprojs, nkpts)
+    @test proj[1:5, 1, 2] ≈ [0.4981375412, 0.0005278635, 0.0, 0.0, 0.0001201347]
 end
 
 @testitem "read_pdos_tot" begin

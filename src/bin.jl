@@ -8,8 +8,8 @@ Read wavefunction data from a QE's `wfc.dat` file.
 
 # Return
 - `miller`: `3 * ngw`, integer matrix of Miller indices for reciprocal lattice vectors.
-- `evc_list`: Length-`nbnd` vector, each element is a length-`igwx` vector of
-    complex wavefunction coefficients.
+- `evc`: `igwx × nbnd` matrix of complex wavefunction coefficients, one column
+    per band.
 """
 function read_wfc_dat(filename::AbstractString)
     f = FortranFile(filename)
@@ -18,10 +18,9 @@ function read_wfc_dat(filename::AbstractString)
     dummy_vector = read(f, (Float64,9))
     miller = reshape(read(f, (Int32,3*igwx)),(3, igwx))
 
-    evc_list = []
-    for _ in 1:nbnd
-        evc = read(f, (ComplexF64,igwx))
-        push!(evc_list,evc)
+    evc = zeros(ComplexF64, igwx, nbnd)
+    for ib in 1:nbnd
+        evc[:, ib] = read(f, (ComplexF64,igwx))
     end
-    return miller, evc_list
+    return miller, evc
 end

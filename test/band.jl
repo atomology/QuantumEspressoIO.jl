@@ -7,9 +7,10 @@
         """
     )
     res = QuantumEspressoIO.read_band_dat(io)
-    @test length(res.kpoints) == length(res.eigenvalues) == 1
+    @test length(res.kpoints) == 1
+    @test size(res.eigenvalues) == (11, 1)
     @test res.kpoints[1] == Vec3(0.0, 0.0, 0.0)
-    @test res.eigenvalues[1] == [-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    @test res.eigenvalues[:, 1] == [-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 
     # guess_high_symmetry_kpoints
     kpoints = [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.1, 0.0], [0.1, 0.1, 0.1]]

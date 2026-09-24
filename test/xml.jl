@@ -29,7 +29,7 @@
     @test length(qe.kweights) == length(qe.kpoints)
     @test all(==(3.913894324853e-3), qe.kweights)
 
-    @test length(qe.eigenvalues) == 511
+    @test size(qe.eigenvalues, 2) == 511
     eigenvalues1 = [
         -5.826225550687528,
         6.165602316381265,
@@ -66,8 +66,8 @@
         24.841843066432848,
         24.841843066563083,
     ]
-    @test qe.eigenvalues[1] ≈ eigenvalues1
-    @test qe.eigenvalues[end] ≈ eigenvalues511
+    @test qe.eigenvalues[:, 1] ≈ eigenvalues1
+    @test qe.eigenvalues[:, end] ≈ eigenvalues511
 
     @test qe.n_electrons ≈ 8.0
     @test qe.fermi_energy ≈ 6.528341904366175
@@ -120,13 +120,13 @@ end
     @test length(qe.kweights) == length(qe.kpoints)
     @test all(==(3.649635036496e-3), qe.kweights)
 
-    @test length(qe.eigenvalues_up) == 274
+    @test size(qe.eigenvalues_up, 2) == 274
     eigenvalues_up2 = [-77.99192823029188, -77.99169805183234, -49.45736655071318]
-    @test qe.eigenvalues_up[2][1:3] ≈ eigenvalues_up2
+    @test qe.eigenvalues_up[1:3, 2] ≈ eigenvalues_up2
 
-    @test length(qe.eigenvalues_dn) == 274
+    @test size(qe.eigenvalues_dn, 2) == 274
     eigenvalues_dn2 = [-74.843061971795, -74.84277910814951, -46.38172392618895]
-    @test qe.eigenvalues_dn[2][1:3] ≈ eigenvalues_dn2
+    @test qe.eigenvalues_dn[1:3, 2] ≈ eigenvalues_dn2
 
     @test qe.fermi_energy ≈ -4.819375066024118
 end

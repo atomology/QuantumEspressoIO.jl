@@ -15,10 +15,10 @@ Read the `projwfc.x` output `projwfc_up` file.
     - `n`: principal quantum number
     - `l`: azimuthal quantum number
     - `m`: magnetic quantum number
-- `projections`: the projection data, size: `n_kpoint * n_bands * n_orbitals`
-    - `n_kpoints`: number of kpoints
+- `projections`: the projection data, size: `n_bands × n_orbitals × n_kpoints`
     - `n_bands`: number of bands
     - `n_orbitals`: number of projected orbitals
+    - `n_kpoints`: number of kpoints
 """
 function read_projwfc_up(io::IO)
     splitline() = split(strip(readline(io)))
@@ -96,7 +96,7 @@ function read_projwfc_up(io::IO)
 
     # projection data
     nlmchi = Vector{NamedTuple}()
-    proj = zeros(Float64, nkstot, nbnd, natomwfc)
+    proj = zeros(Float64, nbnd, natomwfc, nkstot)
     for iw in 1:natomwfc
         line = splitline()
         nwfc = parse(Int, line[1])
@@ -113,7 +113,7 @@ function read_projwfc_up(io::IO)
                 k, b = parse.(Int, line[1:2])
                 (k == ik && b == ib) || error("kpt and band index mismatch")
                 p = parse(Float64, line[3])
-                proj[ik, ib, iw] = p
+                proj[ib, iw, ik] = p
             end
         end
     end
