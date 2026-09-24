@@ -23,3 +23,8 @@ const PW_KEYWORDS = Set([
     "solvents",
     "hubbard",
 ])
+
+"""
+Valid interaction types in the `HUBBARD` card of `pw.x` input.
+"""
+const HUBBARD_TYPES = Set(["U", "J0", "J", "B", "E2", "E3", "V", "ALPHA"])

@@ -262,3 +262,84 @@ end
     """
     @test out == expected
 end
+
+@testitem "read_hubbard!" begin
+    using OrderedCollections: OrderedDict
+    lines = [
+        "HUBBARD ortho-atomic",
+        "! a comment line",
+        "U Ni-3d 5.77",
+        "ALPHA Ni-3d 0.05",
+        "V Ni-3d O-2p 1 12 3.5",
+        "ATOMIC_POSITIONS crystal",
+    ]
+    lcopy = copy(lines)
+    card = QuantumEspressoIO.read_hubbard!(lcopy)
+    @test isa(card, Pair)
+    name, content = card
+    @test name == "hubbard"
+    expected = OrderedDict{String, Any}(
+        "option" => "ortho-atomic",
+        "types" => ["U", "ALPHA", "V"],
+        "manifolds" => ["Ni-3d", "Ni-3d", "Ni-3d O-2p 1 12"],
+        "values" => [5.77, 0.05, 3.5],
+    )
+    @test content == expected
+    @test lcopy == ["ATOMIC_POSITIONS crystal"]
+end
+
+@testitem "write_hubbard" begin
+    using OrderedCollections: OrderedDict
+    card = OrderedDict(
+        "option" => "atomic",
+        "types" => ["U", "ALPHA", "V"],
+        "manifolds" => ["Ni-3d", "Ni-3d", "Ni-3d O-2p 1 12"],
+        "values" => [5.77, 0.05, 3.5],
+    )
+    buf = IOBuffer()
+    @test_logs QuantumEspressoIO.write_hubbard(buf, card)
+    expected = """HUBBARD atomic
+    U Ni-3d 5.77
+    ALPHA Ni-3d 0.05
+    V Ni-3d O-2p 1 12 3.5
+    """
+    @test String(take!(buf)) == expected
+end
+
+@testitem "read_hubbard_dat" begin
+    io = IOBuffer(
+        """# Copy this data in the pw.x input file for DFT+Hubbard calculations
+        HUBBARD {ortho-atomic}
+        U Ni-3d 6.1234
+        U O-2p 3.5
+        """
+    )
+    card = QuantumEspressoIO.read_hubbard_dat(io)
+    @test card["option"] == "ortho-atomic"
+    @test card["types"] == ["U", "U"]
+    @test card["manifolds"] == ["Ni-3d", "O-2p"]
+    @test card["values"] == [6.1234, 3.5]
+end
+
+@testitem "read/write_pw_in (hubbard)" begin
+    input = """&system
+      nat = 1
+      ntyp = 1
+    /
+    ATOMIC_SPECIES
+    Ni    58.693400  Ni.upf
+    ATOMIC_POSITIONS crystal
+    Ni        0.0000000000      0.0000000000      0.0000000000
+    HUBBARD atomic
+    U Ni-3d 5.77
+    """
+    params = @test_logs read_pw_in(IOBuffer(input))
+    @test params["hubbard"]["option"] == "atomic"
+    @test params["hubbard"]["types"] == ["U"]
+    @test params["hubbard"]["manifolds"] == ["Ni-3d"]
+    @test params["hubbard"]["values"] == [5.77]
+
+    buf = IOBuffer()
+    @test_logs write_pw_in(buf, params)
+    @test read_pw_in(IOBuffer(take!(buf))) == params
+end
